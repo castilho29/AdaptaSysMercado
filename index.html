@@ -260,7 +260,7 @@ let tab='loja',q='',editP=null,editC=null,co={cid:'',addr:'',loc:null,pay:'Dinhe
 const items=()=>Object.entries(S.cart).map(([id,qt])=>({p:S.products.find(x=>x.id==id),qt})).filter(x=>x.p&&x.qt>0);
 const total=()=>items().reduce((s,x)=>s+x.p.p*x.qt,0);
 const count=()=>items().reduce((s,x)=>s+x.qt,0);
-const go=t=>{if(CUST&&bloqueado()&&t!='eu'){if(t!=tab)toastMsg(user?'Complete seu cadastro para continuar.':'Crie sua conta (ou entre) para ver os produtos.');t='eu'}tab=t;render();if(CUST&&t=='loja'&&sb)loadProducts().then(()=>{const e=$('#pl');if(tab=='loja'&&e)e.innerHTML=listHtml()})};
+const go=t=>{if(CUST&&bloqueado()&&t=='meus'){if(t!=tab)toastMsg('Faça seu cadastro (uma vez só) para acompanhar seus pedidos.');t='eu'}tab=t;render();if(CUST&&t=='loja'&&sb)loadProducts().then(()=>{const e=$('#pl');if(tab=='loja'&&e)e.innerHTML=listHtml()})};
 /* GPS PRECISO: espera o GPS de verdade (o 1º valor costuma vir do Wi-Fi/antena e errar centenas de metros),
    recusa posição ruim, faz a média ponderada das melhores leituras e explica o que fazer quando não melhora. */
 function getLoc(cb){
@@ -449,6 +449,12 @@ vCart=function(){
   if(me&&!co.loc)co.loc=me.loc||null;
   const h=_vc();
   if(!items().length)return h;
+  if(bloqueado()){   // ainda sem cadastro: mostra só os itens e o total; entrega e pagamento vêm depois do cadastro
+    const corte=h.indexOf('<div class="card"><h2>Entrega e pagamento</h2>');
+    return (corte>0?h.slice(0,corte):h)+`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;font-size:18px"><span>Total dos produtos</span><b>${R(items().reduce((s,x)=>s+x.p.p*x.qt,0))}</b></div>
+     <p class="mu" style="margin:10px 0">Para enviar o pedido falta só o seu cadastro: nome, WhatsApp e endereço. É uma vez só e não tem senha.</p>
+     <button class="b w" style="width:100%" onclick="go('eu')">Continuar: fazer meu cadastro</button></div>`;
+  }
   const blk=me?`<p><b>${esc(me.n)}</b><br><span class="mu">${esc(me.t)}</span></p>`:`<p class="mu">Entre ou crie sua conta para finalizar o pedido.</p><button class="b s w" onclick="go('eu')">Entrar ou criar conta</button>`;
   return h.replace(/<label>Cliente<\/label><select[\s\S]*?<\/select>\s*(<p class="mu">Nenhum cliente[\s\S]*?<\/p>)?/,()=>'<label>Entregar para</label>'+blk).replace('onclick="finish()"','onclick="finishC()"');
 };
@@ -550,7 +556,7 @@ async function loadMe(){
 }
 async function sair(){await sb.auth.signOut();user=null;me=null;S.mine=[];loc();go('loja')}
 async function finishC(){
-  if(!user||!me){alert('Entre na sua conta e complete o cadastro para finalizar.');return go('eu')}
+  if(!user||!me||bloqueado()){toastMsg('Falta só o seu cadastro (uma vez só) para enviar o pedido. O carrinho fica guardado.');return go('eu')}
   await loadCfg();{const hs=horSt(EMP.hor);if(!hs.aberto){render();return alert(horMsg(hs))}}
   const it=items(),t=totalFinal(),cash=parseFloat(co.cash)||0;
   if(co.ent!='retirada'&&taxaAtiva()&&taxaDe(co.bai)==null)return alert('Escolha o bairro da entrega ou selecione "Retirar na loja".');
@@ -717,8 +723,8 @@ async function init(){
   if(!ipr&&needInstall())showGate();
   await loadCfg();applyEmp();if(tel()){$('#wa').href='https://wa.me/'+waNum(tel());$('#wa').hidden=false}
   render();await loadProducts();if(user)await loadMe();
-  if(bloqueado())tab='eu';
-  if(ipr&&user){tab='meus'}
+  // o cliente pode olhar os produtos e montar o carrinho antes do cadastro; o cadastro é pedido ao enviar o pedido
+  if(ipr&&user&&!bloqueado()){tab='meus'}
   render();
 }
 /* volta da página de pagamento da InfinitePay: anota os códigos no pedido; quem confirma é a loja */
@@ -1048,7 +1054,7 @@ const readAddr=()=>{const g=i=>($('#'+i)?$('#'+i).value:'').trim(),f={rua:g('f-r
 function vEu(){
   if(user)return vPerfil();
   if(cLoc)setTimeout(()=>mapaMostra(cLoc),60);
-  return `${bloqueado()?`<div class="card bemv"><b>Bem-vindo ao ${esc(EMP.n)}!</b><br>Faça seu cadastro para ver os produtos e pedir. Não precisa de senha: é só uma vez.</div>`:''}<div class="card"><h2>Seu cadastro</h2>
+  return `${bloqueado()?`<div class="card bemv"><b>Bem-vindo ao ${esc(EMP.n)}!</b><br>${items().length?'Falta só o seu cadastro para enviar o pedido. O carrinho fica guardado.':'Faça seu cadastro para pedir. Não precisa de senha: é só uma vez.'}</div>`:''}<div class="card"><h2>Seu cadastro</h2>
   <label>Nome completo *</label><input id="an" autocomplete="name">
   <label>WhatsApp com DDD *</label><input id="at" type="tel" inputmode="tel" autocomplete="tel" placeholder="(93) 99999-9999">
   <label>E-mail <small class="mu">(opcional)</small></label><input id="ae" type="email" inputmode="email" autocomplete="email" placeholder="nome@email.com">
