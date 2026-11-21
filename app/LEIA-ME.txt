@@ -1,0 +1,710 @@
+﻿MERCADO ONLINE · PDV, GESTÃO E CATÁLOGO DO APP
+==============================================
+
+O que é
+-------
+Sistema para mercados: PDV do caixa, Gestão (estoque, notas, contas, fiscal) e o
+catálogo do app para o cliente pedir pelo celular. Serve para QUALQUER mercado:
+cada empresa tem o próprio banco no computador e o próprio banco online.
+
+Um programa que roda escondido no computador da loja. Ele guarda produtos, vendas e
+movimentos de caixa num banco de dados no próprio computador.
+Por isso o PDV abre, vende, faz sangria, abre e fecha o caixa mesmo SEM INTERNET.
+Quando a internet volta, ele envia tudo para o sistema online (Supabase) e traz
+as novidades: produtos e preços alterados no painel, pedidos do app e ajustes.
+
+
+MERCADO NOVO: IMPLANTAÇÃO (uma vez por empresa)
+-----------------------------------------------
+Cada empresa tem:
+  - o BANCO LOCAL, no computador servidor da loja (vende sem internet);
+  - o BANCO ONLINE, um projeto Supabase só dela (cópia de segurança,
+    painel pelo celular e catálogo do app).
+Nada é misturado entre empresas.
+
+A. Criar o banco online (10 minutos, grátis):
+   1. supabase.com > New project. Nome da empresa, senha forte para o banco,
+      região "South America (São Paulo)".
+   2. SQL Editor > New query > cole o arquivo "supabase.sql" inteiro > Run.
+   3. Authentication > Sign In / Providers:
+        - ligue "Allow anonymous sign-ins" (o cliente se cadastra no app SEM SENHA);
+        - em Email, desligue "Confirm email".
+   4. Authentication > Users > Add user: e-mail e senha do dono
+      (marque "Auto Confirm User").
+   5. No SQL Editor rode (troque o e-mail):
+        insert into admins(user_id) select id from auth.users where email='dono@loja.com';
+   6. Project Settings > API (Data API): anote a "Project URL" e a chave
+      "anon public". NUNCA use a chave "service_role" (é secreta).
+
+B. Instalar no computador servidor: veja "INSTALAÇÃO" abaixo (opção 1 ou 2).
+   Na primeira vez abre a tela "Primeira configuração": cole a Project URL e a
+   chave anon, depois entre com o e-mail e a senha do dono.
+
+C. No PDV, cadastre o gerente (nome e senha de 4 números).
+
+D. Na Gestão:
+   - Ajustes da loja: nome, endereço, telefone, logotipo, Pix, taxas de entrega.
+   - Fiscal: estado (UF), cidade, certificado A1, CNPJ, IE, CSC (veja "NFC-e").
+   - Ajustes da loja > "Baixar o site do catálogo": gera o site do app já
+     ligado ao banco desta empresa, com o nome e o logotipo dela. Publique
+     o .zip no Netlify (arrastar e soltar) ou no GitHub Pages.
+     Quem já tinha o site publicado: publique de novo o .zip gerado (o site
+     novo precisa do arquivo config.js que vem nele).
+
+TOQUE DO PEDIDO DO APP (no PDV)
+-------------------------------
+PDV > Ajustes > "Toque do pedido do app":
+- Escolha o toque: Campainha, Plim-plim, Sino, Bip, Sirene ou o SEU MP3.
+- Volume e "Ouvir o toque" para testar.
+- "Insistir": toca de novo (a cada 5 a 60 segundos) até alguém ACEITAR o pedido.
+- Aparece um aviso amarelo embaixo da tela com "Ver pedidos" e "Silenciar 5 min".
+  Se chegar outro pedido, volta a tocar mesmo silenciado.
+- Enviar MP3 (ou M4A, até 3 MB): o toque fica no servidor e vale para todos os
+  caixas que escolherem "Meu toque". Cada caixa escolhe o seu toque e volume.
+
+HORÁRIO DE PEDIDOS PELO APP
+---------------------------
+Gestão > Ajustes da loja > "Horário de pedidos pelo app":
+- Marque "Usar horário de atendimento" e preencha cada dia (até 2 turnos, ex.:
+  07:00 às 12:00 e 14:00 às 19:00). Dia sem marcar = fechado. Pode passar da
+  meia-noite (ex.: 18:00 às 02:00).
+- "Parar de aceitar pedidos X minutos antes de fechar".
+- Fuso horário da loja (AM, MT, MS, RO, RR e AC têm hora diferente de Brasília).
+- Fora do horário o cliente vê "Fechado agora · abre amanhã às 07:00", pode montar
+  o carrinho, mas NÃO consegue enviar. O banco online confere de novo (função
+  loja_aberta), então não dá para pedir fora do horário nem por fora do app.
+- PAUSAR NA HORA (muito movimento, sem entregador): no PDV, tela Pedidos >
+  "Pausar pedidos" e escolha a mensagem para o cliente; "Retomar pedidos" volta.
+  Precisa de internet para o app ficar sabendo (leva poucos segundos).
+- IMPORTANTE: rode de novo o supabase.sql no Supabase para valer no banco online.
+
+ENTREGADORES (tela no celular do entregador)
+--------------------------------------------
+1. Gestão > Ajustes da loja: preencha o "Endereço do site do catálogo".
+2. Gestão > Entregadores: digite o nome e "Cadastrar entregador". Aparece um
+   QR Code e um código (vale 24 h, uma vez só). O entregador aponta a câmera do
+   celular para o QR Code (ou recebe o link pelo WhatsApp). Não tem senha.
+   APP SEPARADO: o app de Entregas fica em SEU-SITE/entregador/ e é outro
+   app: nome "Entregas", ícone próprio (moto vermelha com pino) e instalação à
+   parte. No mesmo celular dá para ter o app de compras e o de Entregas, cada
+   um com seu ícone, sem misturar. Ao abrir, aparece "Instale o app de
+   Entregas" (Android: botão Instalar; iPhone: Compartilhar > Adicionar à Tela
+   de Início). O endereço antigo (entregador.html) leva para o novo sozinho.
+   Se no Android o link de Entregas abrir DENTRO do app de compras: o app de
+   compras se atualiza sozinho (até 1 dia) e para de pegar esse link. Na hora,
+   toque em "Abrir no Chrome" no aviso e instale o app de Entregas.
+3. Na tela dele aparecem os pedidos ACEITOS para entrega, com:
+   endereço, bairro, referência, observação, valor a cobrar, TROCO a levar,
+   botões Rota (Google Maps), Waze, Ligar e WhatsApp do cliente.
+4. "Vou levar este": o pedido fica com ele (outros entregadores veem "Com Fulano")
+   e o cliente vê "Saiu para entrega com Fulano".
+5. "Entregue": confirma o valor recebido/troco e dá baixa. O PDV mostra
+   "Entregue por Fulano" e o cliente vê "Entregue" no app.
+- Celular perdido ou entregador saiu: "Novo código" ou "Remover" (o celular
+  antigo para de funcionar na hora).
+- GANHOS DO ENTREGADOR (Gestão > Entregadores, em cada entregador):
+  * "Valor de cada entrega": valor fixo (ex.: R$ 5,00) ou a taxa de entrega que
+    o cliente pagou. O valor fica gravado na hora de cada entrega.
+  * Mostra entregas de hoje e do mês, o dinheiro que ele recebeu dos clientes
+    hoje (para prestar contas) e o SALDO A PAGAR.
+  * "Registrar pagamento": anota o que a loja pagou; o saldo diminui.
+  * No celular, a aba "Ganhos" mostra o mesmo para ele: entregas do dia e do mês,
+    valor de cada uma, pagamentos recebidos e o saldo a receber.
+
+ENDEREÇO DO CLIENTE (bairro certo)
+----------------------------------
+- O bairro do cadastro é escolhido na LISTA DE BAIRROS da loja (os mesmos das
+  taxas de entrega). Cadastre todos os bairros atendidos em Ajustes da loja.
+- O app preenche rua e bairro primeiro pelos VIZINHOS que já confirmaram o
+  endereço no mapa; o mapa público (que erra bairros em cidades pequenas) só
+  entra quando não há vizinho. O cliente sempre confere e confirma no mapa.
+
+APP DO CLIENTE (catálogo)
+-------------------------
+- No celular, o cliente PRECISA instalar o app (Android: botão "Instalar";
+  iPhone: Compartilhar > Adicionar à Tela de Início).
+- Antes de ver os produtos, faz o cadastro: nome, WhatsApp, e-mail (opcional)
+  e endereço completo com a LOCALIZAÇÃO REAL pelo GPS (confere o ponto no mapa
+  e pode arrastar o marcador até a porta). NÃO TEM SENHA: o cadastro fica
+  guardado no celular e o app fica sempre conectado.
+- Trocou de celular ou reinstalou: faz o cadastro de novo (por segurança, não dá
+  para "entrar" só com o número de WhatsApp de alguém).
+- Em Pedidos o cliente acompanha Recebido > Aceito > Entregue e vê o histórico
+  (quantidade de pedidos, valores e datas).
+
+E. Outros caixas: instalar com a opção 3 e parear (veja "CAIXAS NA REDE").
+
+
+INSTALAÇÃO (uma vez em cada computador)
+---------------------------------------
+1. Tenha o banco online da empresa pronto (passo A acima). Em cada ATUALIZAÇÃO,
+   rode de novo o "supabase.sql" no SQL Editor (seguro repetir: só cria o que falta).
+
+2. Descompacte o zip em qualquer lugar (pode ser em Downloads) e dê dois
+   cliques em "instalar.bat". O Windows pede "Permitir alterações?": Sim.
+   Não precisa instalar o Node.js: o instalador baixa sozinho (precisa de
+   internet só nessa hora).
+
+3. Escolha como o computador vai ser usado:
+     1 - SERVIDOR          o computador principal; só ele usa o PDV
+     2 - SERVIDOR + CAIXAS o computador principal, e outros caixas usam ele pela rede
+     3 - CAIXA             um caixa a mais, que usa o servidor da loja
+
+4. O instalador faz tudo sozinho:
+   - copia o programa para C:\Program Files\MercadoOnline
+   - guarda os dados em C:\ProgramData\MercadoOnline\dados (pasta trancada)
+   - se já existia uma versão anterior (PDV-Mezzomo, ou pasta "dados" solta
+     do zip), TRAZ TODAS AS VENDAS, PRODUTOS E NOTAS para o lugar novo
+   - cria a tarefa do Windows que liga o PDV no boot, sem janela
+   - cria os atalhos PDV, Gestão e Reiniciar PDV na área de trabalho
+   - no modo 2, libera a rede da loja no firewall (veja "CAIXAS NA REDE")
+   Depois pode apagar a pasta descompactada.
+
+5. No primeiro acesso do servidor, entre com a conta de administrador da loja.
+   SÓ ESTE PRIMEIRO ACESSO PRECISA DE INTERNET. Depois disso ele funciona sem.
+
+
+SEGURANÇA DA PASTA (para o pessoal do outro sistema não mexer)
+--------------------------------------------------------------
+- O PDV roda pela conta SYSTEM do Windows (como um serviço), não pela conta de
+  quem está usando o computador.
+- A pasta de dados (banco, certificado A1, XMLs, backups) só abre para o
+  Windows e para administradores. Um usuário comum não consegue abrir, copiar,
+  mudar nem apagar nada ali, nem por engano.
+- A pasta do programa: usuários comuns só conseguem ler (não alteram nem apagam).
+- O PDV ainda confere a cada 6 horas se algum arquivo do programa foi mexido.
+  Se foi, aparece um aviso em Gestão > Rede e segurança.
+- A senha do certificado fica guardada criptografada pelo próprio Windows
+  (só funciona neste computador).
+- Ninguém sem permissão consegue desligar o PDV: o botão "Reiniciar PDV" só
+  pede para ele religar.
+
+IMPORTANTE: tudo isso vale para contas que NÃO são administradoras. Quem é
+administrador do Windows consegue mexer em qualquer coisa. Por isso:
+  - Deixe a senha de administrador só com o dono.
+  - As pessoas do outro sistema (e os caixas) devem usar uma conta "Padrão":
+    Configurações > Contas > Família e outros usuários > Alterar tipo de conta > Padrão.
+  O PDV funciona normal numa conta Padrão.
+
+
+CAIXAS NA REDE (mais de um caixa)
+---------------------------------
+O SERVIDOR (computador principal) guarda tudo: banco, notas, certificado e
+sincronização. Os CAIXAS só mostram a tela e imprimem na impressora deles.
+
+No servidor: instalar com a opção 2 (SERVIDOR + CAIXAS).
+  O instalador cria sozinho a liberação no firewall do Windows, bem restrita:
+  só para o programa do PDV e só para computadores da rede local da loja.
+  Não precisa mexer em firewall, roteador nem endereço.
+Em cada caixa: instalar com a opção 3 (CAIXA). A tela "Conectar este caixa"
+  abre sozinha e já procura o servidor na rede.
+  1) No servidor: Gestão > Rede e segurança > "Parear novo caixa": aparece um
+     código de 6 números (vale 10 minutos, uma vez só).
+  2) No caixa: digite o código, dê um nome (ex.: Caixa 2) e Conectar.
+  Pronto: o caixa vende, emite NFC-e (pelo servidor) e imprime na própria impressora.
+
+- Só caixas pareados entram. Um celular ou notebook na mesma rede (até no Wi-Fi
+  dos clientes) não consegue abrir nada do PDV.
+- Caixa perdido, trocado ou vendido: Gestão > Rede e segurança > Remover.
+  Ele perde o acesso na hora.
+- No Caixa (F9) dá para ver "Este caixa" ou "Todos os caixas".
+- Se o servidor estiver desligado, o caixa mostra "Servidor da loja desligado
+  ou fora da rede". Ligue o servidor primeiro.
+- O servidor e os caixas precisam estar na mesma rede (mesmo roteador).
+- Antivírus com firewall próprio (Avast, Kaspersky, Norton...) às vezes
+  bloqueia por conta própria: nesse caso, libere o "node.exe" de
+  C:\Program Files\MercadoOnline\node nesse antivírus.
+
+
+IMPRESSORA BEMATECH (impressão direta, sem janela)
+--------------------------------------------------
+No PDV: ⚙️ Ajustes > "Impressora direta (USB)".
+  - Modo: Direto na impressora (ESC/POS)
+  - Impressora: escolha a Bematech da lista (o nome que aparece no Windows)
+  - Clique em "Imprimir teste".
+
+Se sair texto estranho ou nada sair, a impressora está no modo de comandos
+Bematech (ESC/Bema). Coloque-a no modo ESC/POS pelo utilitário da Bematech
+("Bematech User Software" ou a ferramenta de configuração do modelo).
+Enquanto isso, use o modo "Janela de impressão do navegador": o atalho do PDV
+já abre o navegador com impressão sem janela (--kiosk-printing), usando a
+impressora PADRÃO do Windows.
+
+A opção "Abrir a gaveta" funciona com gaveta ligada na impressora (RJ-11).
+
+
+ABRE SOZINHO, EM TELA PRÓPRIA, SEM SENHA
+----------------------------------------
+- Ao ligar o computador, o servidor e a TELA DO PDV abrem sozinhos (não precisa
+  procurar atalho nem abrir navegador). A tela é uma janela própria, sem barra de
+  endereço. Funciona sem internet.
+- Dentro do PDV, os botões "Pedidos" e "Gestão" trocam a tela na mesma janela
+  (não abrem janelas novas). O mesmo botão vira "Voltar ao caixa" (ou Esc).
+  A Gestão fica carregada por trás: voltar a ela é na hora, na mesma aba.
+- Na área de trabalho também há o atalho "Gestão Mercado Online", para usar a
+  Gestão em outro momento sem abrir o caixa.
+- Entrar sem senha: Gestão > Regras > "Entrar sem senha (tocar no nome)".
+  O PDV lembra quem estava no caixa e já abre com essa pessoa; para trocar, toque
+  no nome no topo e depois no nome de quem vai usar. O gerente autoriza
+  cancelamentos tocando no nome dele. A Gestão abre direto (se houver 1 gerente).
+  Para não pedir nem o toque do gerente, desligue os itens em Gestão > Regras.
+- A conta da loja (e-mail e senha) é pedida UMA única vez, na instalação.
+
+Quem já tinha o sistema: rode o "instalar.bat" novo uma vez. Ele traz os dados
+da pasta antiga para o lugar protegido e troca os atalhos antigos.
+
+
+PEDIDOS DO APP NO PRÓPRIO PDV (sem abrir outra tela)
+----------------------------------------------------
+- Botão "Pedidos" no topo (ou F4): a tela do caixa vira a tela de pedidos.
+  "Voltar ao caixa" (ou Esc) volta. Pedido novo toca alarme e pisca o botão.
+- Caminho do pedido:
+  1. "Aceitar pedido": imprime a SEPARAÇÃO (lista do que buscar na prateleira,
+     com quadradinho para marcar, entrega/retirada, troco e observação).
+  2. Separe as mercadorias e traga para o caixa.
+  3. "Faturar no caixa": o pedido entra no caixa com os itens; confira, ajuste
+     se faltou algo e receba (F10) como uma venda normal (sai a NFC-e).
+  4. Entrega: "Marcar entregue" quando o motoboy entregar.
+- Se houver uma venda no caixa na hora de faturar, ela é guardada sozinha.
+- Pedido cancelado NÃO segura estoque: o pedido do app reserva os produtos quando
+  chega e devolve tudo no cancelamento. Para limpar a lista: Pedidos > Cancelados
+  > "Excluir" (ou "Excluir todos os cancelados"). Pedido que já foi faturado e
+  depois cancelado não se exclui: ele fica no histórico de vendas do caixa.
+  (Rode de novo o supabase.sql no Supabase para a exclusão valer no online.)
+
+
+SERVIDOR SEM JANELA E BOTÃO DE REINICIAR
+----------------------------------------
+- O servidor roda escondido, sem janela preta (também no Windows 11).
+  Se aparecer alguma janela preta antiga, rode o atualizar.bat.
+- Algo travou ou ficou estranho?
+  * No PDV: Ajustes > "Reiniciar o sistema". A tela volta sozinha em ~10 s.
+  * Tela travada de vez: atalho "Reiniciar PDV" na área de trabalho
+    (religa o sistema e abre o caixa de novo).
+  Nenhuma venda se perde: tudo fica gravado no computador.
+
+
+COMO SABER SE ESTÁ SINCRONIZADO
+-------------------------------
+No topo do PDV:
+  - "Online · sinc. 14:32"  = tudo certo, última sincronização às 14:32.
+  - "Sem internet"          = vendendo normalmente, guardando no computador.
+  - "⏳ 5 a enviar"          = lançamentos esperando a internet voltar.
+  - "⚠️ recusado(s)"         = o sistema online não aceitou algo; abra o Caixa
+                               (F9) para ver o motivo, tentar de novo ou descartar.
+  - "Servidor local parado"  = feche o PDV e abra de novo pelo atalho (ele religa).
+
+No Caixa (F9) há o botão "Sincronizar agora".
+
+
+CUIDADOS IMPORTANTES
+--------------------
+- NÃO apague a pasta de dados. Ali estão as vendas ainda não enviadas.
+- Backup automático: C:\ProgramData\MercadoOnline\dados\backup (um arquivo por dia, guarda 30 dias).
+  Vale copiar essa pasta para um pendrive de vez em quando (precisa ser
+  administrador para abrir a pasta).
+- Para sair da conta (botão ⎋), o servidor exige que tudo já tenha sido enviado.
+- Estoque: a venda baixa na hora no computador. Se o painel alterar o estoque
+  enquanto o caixa está sem internet, ao voltar vale o valor do painel menos
+  as vendas que o caixa fez nesse período.
+- O pedido do app só chega ao PDV quando há internet (ele nasce online).
+
+
+ATUALIZAR O PROGRAMA
+--------------------
+1. Clique com o botão direito no Mercado-Online.zip novo > "Extrair tudo".
+   (Não rode de dentro do zip sem extrair.)
+2. Abra a pasta extraída (MercadoOnline) e dê dois cliques em "atualizar.bat".
+   (Mantém o mesmo modo, servidor ou caixa, e TODOS os dados.)
+   NÃO use o atualizar.bat de C:\Program Files\MercadoOnline: aquele é a versão
+   já instalada e não muda nada (agora ele avisa isso).
+3. A janela preta mostra "Versão instalada: X -> versão nova: Y" e, no fim,
+   "ATUALIZADO". As telas do PDV e da Gestão abertas são fechadas e o PDV
+   reabre já na versão nova.
+4. Para conferir: a versão aparece no fim do menu da Gestão.
+   Num caixa da rede, o PDV se recarrega sozinho quando o servidor atualiza.
+Para trocar o modo (ex.: virou servidor com caixas): rode "instalar.bat" e
+escolha a nova opção. Para remover: "desinstalar.bat" (os dados ficam guardados).
+
+
+OPERADORES E SENHA DO GERENTE
+-----------------------------
+- No primeiro acesso o PDV pede o cadastro do GERENTE (nome + PIN de 4 a 8 números).
+- Os outros operadores (caixas) são cadastrados na Gestão (botão 🗂️ no topo do PDV).
+- Cada um entra com o próprio PIN; o nome sai no cupom e no resumo do caixa.
+- Pedem a senha do gerente (quando quem está no caixa não é gerente):
+  cancelar item, cancelar venda, desconto acima do limite, vender abaixo do preço,
+  cadastrar produto, mexer no estoque e fiado acima do limite.
+  Isso é configurável em Gestão > Regras.
+
+CANCELAR UMA VENDA JÁ FEITA
+---------------------------
+F9 (Caixa) > Vendas de hoje > Cancelar. Pede o motivo e a senha do gerente,
+devolve os itens ao estoque, tira do fiado (se foi fiado) e imprime o comprovante.
+
+PRODUTO SEM CADASTRO NO BALCÃO
+------------------------------
+Se o código não existir, o PDV oferece: cadastrar o produto na hora (já vai para o
+sistema online) ou vender como "avulso" (sem estoque). Também dá para mudar o
+preço de um produto pelo F3, marcando "Salvar como novo preço".
+
+FIADO
+-----
+- Cadastre o cliente no F6 (Novo cliente) com o limite de fiado.
+- No pagamento, F5 = Fiado. O cupom sai com linha para o cliente assinar.
+- Receber: F6 > escolher o cliente > Receber. Dinheiro recebido entra na gaveta.
+- Gestão > Fiado: quem deve, extrato, cobrança pelo WhatsApp e ajustes.
+
+GESTÃO (estoque)
+----------------
+- Produtos: custo, margem, estoque mínimo, NCM (vai ser usado na NFC-e).
+- Entrada de nota: escolha o XML da NF-e do fornecedor. Na primeira vez, vincule
+  cada item a um produto (ou crie) e informe o fator (fardo com 6 = 6). Nas
+  próximas notas desse fornecedor, tudo é reconhecido sozinho.
+- Inventário: bipe e digite quanto tem na prateleira; o sistema acerta a diferença.
+- Estoque baixo: lista de compras para imprimir ou mandar no WhatsApp.
+- Movimentos: histórico de entradas, perdas, ajustes e contagens.
+
+IMPORTANTE: rode de novo o supabase.sql no Supabase. Ele cria as tabelas de
+operadores, fiado e movimentos de estoque. Sem isso, essas informações ficam só
+neste computador (aparecem como "recusadas" no F9 até o SQL ser rodado).
+
+
+PEDIDOS DO APP, CLIENTES E AJUSTES (na Gestão)
+----------------------------------------------
+A Gestão substitui o painel online da loja:
+- Pedidos do app: alarme de pedido novo, confirmar (imprime sozinho), entregue,
+  cancelar (devolve o estoque), imprimir e WhatsApp do cliente.
+  Os pedidos chegam quando o computador está com internet; depois disso, tudo
+  pode ser feito sem internet e sobe quando a conexão voltar.
+- Clientes: todos os clientes do app e do balcão, com fiado.
+- Ajustes da loja: dados, Pix, taxas de entrega por bairro, mensagem e logotipo.
+  O catálogo do app passa a usar esses ajustes assim que sincronizar.
+- Produtos: foto do catálogo, importar planilha (CSV) e excluir produto.
+O catálogo do app (site do cliente) continua online como sempre.
+O painel online antigo (admin.html) agora é SÓ CONSULTA: abre no celular, de qualquer
+lugar, e mostra vendas do dia, pedidos, estoque baixo, contas e validade. Para mudar
+qualquer coisa, use a Gestão no computador do caixa.
+
+
+MENU RÁPIDO E GUARDAR COMPRA (no PDV)
+-------------------------------------
+- Menu rápido: botões abaixo da busca com os produtos mais vendidos ou sem
+  código de barras. Toque e o produto entra na venda. Para escolher quais
+  aparecem: "Montar menu rápido" (ou Gestão > Produtos > marcar "menu rápido").
+  A foto do produto aparece no botão (a mesma do catálogo do app). Para pôr ou
+  trocar a foto: Gestão > Produtos > abrir o produto > Foto. Sem foto, o botão
+  mostra a primeira letra do nome.
+- Guardar compra (tecla F5): guarda NA HORA, sem perguntar nada, com o nome
+  automático "Venda 1", "Venda 2"... até "Venda 100" (se o cliente já foi escolhido
+  no F6, fica com o nome dele). Atenda o próximo e depois toque em "Guardadas" (ou
+  F5 com o caixa vazio). Em cada compra guardada, "✏️ Nome / cliente" deixa dar um
+  nome ou escolher o cliente cadastrado (CPF na nota).
+
+
+CORES E TELA MAIS LIMPA (⚙️ Ajustes do PDV)
+-------------------------------------------
+- Temas da tela (15): Clássicos (Azul e amarelo, Verde mercado, Azul calmo,
+  Laranja quente, Roxo) e Inspirados (Vintage, Moderno, Noite/escuro, Feira,
+  Oceano, Terra, Doce, Sol, Lavanda, Grafite). Cada tema muda cores, fundo e
+  letras. Toque para ver na hora; vale depois de Salvar (a Gestão usa o mesmo).
+  Na Gestão, o botão "Tema" (no topo) muda o tema do PDV e da Gestão juntos.
+- Tema do catálogo do app (o que o cliente vê no celular): Gestão > Ajustes da
+  loja > Tema do catálogo > Salvar ajustes. Chega ao app quando sincronizar.
+  ("Original do app" volta ao visual de antes.)
+- No topo: botões Pedidos (fica destacado e mostra quantos pedidos do app estão
+  esperando), Gestão, Ajustes e Sair.
+- O que aparece na tela: desmarque os botões que este caixa não usa (Buscar,
+  Desconto, Avulso, Novo produto, menu rápido...). "Deixar só o essencial" já
+  esconde os menos usados. As teclas F2, F7 etc. continuam funcionando.
+- No topo ficam juntos: a hora, a cidade, a data e se está sincronizado.
+
+
+NFC-e (NOTA FISCAL DO CONSUMIDOR) — direto na SEFAZ, sem mensalidade
+--------------------------------------------------------------------
+Tudo fica em Gestão > Fiscal (NFC-e):
+1. Certificado digital A1: escolha o arquivo .pfx e digite a senha > Instalar.
+2. Dados da nota: CNPJ, IE, razão social, endereço, ID do CSC e CSC (os mesmos
+   do cadastro na SEFAZ do estado). Escolha o ESTADO (UF) e a CIDADE na lista:
+   o código IBGE da cidade é preenchido sozinho.
+   Funciona nas 27 UFs: o sistema já sabe qual SEFAZ autoriza cada estado
+   (própria em SP, MG, PR, RS, GO, MS, MT, AM, BA e PE; SVRS ou SVAN nos demais)
+   e qual endereço do QR Code usar. QR Code: deixe em "Automático".
+3. Comece em HOMOLOGAÇÃO (teste, sem valor fiscal) na SÉRIE 2. Marque
+   "Emitir NFC-e nas vendas do caixa" e Salvar. Clique em "Testar comunicação".
+4. Faça algumas vendas de teste no PDV. Elas devem sair "Autorizada".
+5. Quando tudo estiver certo, troque para PRODUÇÃO. Use uma série que o sistema
+   antigo NÃO usa (ou pare de emitir nele), para os números não se repetirem.
+
+No caixa:
+- No pagamento aparece "Emitir NFC-e" (já marcado). Ao finalizar, a nota é
+  enviada e o DANFE NFC-e sai na impressora com o QR Code.
+- SEM INTERNET: a nota sai em CONTINGÊNCIA (impressa com o aviso) e é enviada
+  sozinha quando a internet voltar. O topo mostra "🧾 N NFC-e em contingência".
+  PRAZO: a nota em contingência deve ser transmitida em até 24 horas. Com 20
+  horas ou mais sem autorização, aparece uma faixa VERMELHA no topo do PDV (e na
+  Gestão > Fiscal) com as horas que faltam e o botão "Enviar agora". Faltando
+  2 horas, a faixa pisca. Confira a internet do computador servidor.
+- Produto sem NCM: o PDV avisa quais são. Cadastre o NCM em Gestão > Produtos
+  e toque em "Tentar de novo" (o número da nota não é perdido).
+- Produto com substituição tributária (refrigerante, cerveja, etc.): na ficha do
+  produto escolha "Substituição tributária · CSOSN 500" e informe o CEST.
+- Cancelar a venda (F9 > Cancelar) também cancela a NFC-e na SEFAZ. Só a nota:
+  Gestão > Fiscal > Cancelar (pede o motivo). A SEFAZ só aceita pouco tempo
+  depois da venda.
+- Para o contador: Gestão > Fiscal > "XMLs do mês" > Baixar .zip.
+- Os XMLs ficam em C:\ProgramData\MercadoOnline\dados\xml (por mês). Guarde por 5 anos (vão no backup).
+
+NF-e MODELO 55 (venda para empresa e devolução ao fornecedor)
+-------------------------------------------------------------
+Gestão > NF-e (55). Usa o mesmo certificado e a mesma SEFAZ. Precisa de internet.
+- Série e próximo número: Gestão > Fiscal (use uma série que o sistema antigo não
+  usa). Comece em Homologação, igual à NFC-e.
+- "NF-e de venda": escolha os produtos (ou "Puxar de uma venda do caixa"),
+  preencha o destinatário (CNPJ/CPF, IE, endereço, cidade) e o pagamento.
+  Se a venda já teve NFC-e, cancele a NFC-e antes para não sair nota duas vezes.
+- "Devolução ao fornecedor": escolha a nota de compra, marque o que volta e a
+  quantidade. O fornecedor e a nota original já vêm preenchidos; o estoque baixa.
+- Na lista: DANFE (folha A4, com código de barras), XML, Carta de correção e
+  Cancelar (até 24 h; o estoque volta).
+- Venda para consumidor final de outro estado (DIFAL) não é feita aqui: fale com
+  o contador.
+
+INUTILIZAR NUMERAÇÃO
+--------------------
+Gestão > Fiscal > "Inutilizar numeração": quando um número de NFC-e ou NF-e ficou
+para trás e não vai ser usado. Número que já tem nota não pode ser inutilizado.
+
+TRIBUTOS APROXIMADOS (tabela IBPT · Lei 12.741/2012)
+----------------------------------------------------
+- A NFC-e sai com o valor aproximado dos impostos de cada produto, e o cupom
+  mostra "Tributos totais incidentes ... Federal, Estadual, Municipal · Fonte IBPT".
+- A tabela NÃO vem mais dentro do programa (instalação mais leve). Assim que o
+  estado (UF) estiver nos dados fiscais e houver internet, o sistema BAIXA SOZINHO
+  a tabela do seu estado e depois se ATUALIZA SOZINHA quando sai versão nova.
+  Na hora: Gestão > Configurações > Fiscal > "Baixar a tabela do XX agora".
+- Pelo campo "Importar arquivo (.csv ou .zip)" entra o arquivo oficial
+  (deolhonoimposto.ibpt.org.br > cadastrar o CNPJ > "Gerar tabela") ou o .csv
+  exportado de outro computador.
+- "Exportar tabela (.csv)" salva a tabela instalada + o que a API já respondeu,
+  para levar num pendrive a um computador sem internet e importar lá.
+- Com o token da API cadastrado, a nota sai com os tributos mesmo sem tabela.
+- A Gestão avisa se algum NCM dos produtos não está na tabela.
+
+PREÇO AUTOMÁTICO, CONTAS A PAGAR E VALIDADE (na entrada da nota)
+----------------------------------------------------------------
+- Preço: o custo vem da nota e o sistema sugere o preço de venda = custo + lucro %
+  (padrão 30%, arredondado para ,90 — mude no topo da entrada de nota). Cada
+  produto lembra o seu próprio %. Produto que ficou mais caro vem com "mudar o
+  preço" marcado; se o custo ficar muito diferente, o sistema NÃO muda o preço
+  sozinho e avisa "confira o fator".
+- Contas a pagar: os boletos (duplicatas) que vêm no XML viram contas a pagar
+  com vencimento e valor. Sem boleto, fica à vista na data da nota (dá para mudar).
+  Gestão > Contas a pagar: vencidas, de hoje, da semana; "Pagar" (Pix, boleto,
+  dinheiro do caixa — este já lança a saída no caixa), "Nova conta" para luz,
+  aluguel etc. (pode repetir todo mês).
+- Validade: coluna "Validade" na entrada (já vem preenchida quando a nota traz o
+  lote). Gestão > Validade mostra o que está vencido e o que vence em 7 e 30 dias;
+  "Baixar perda" tira do estoque, "Já saiu" encerra o lote.
+- Rode de novo o supabase.sql (cria as tabelas de contas e validade no online).
+
+NOTAS DOS FORNECEDORES (busca automática na SEFAZ)
+--------------------------------------------------
+- Ligue em Gestão > Fiscal > "Buscar automaticamente na SEFAZ as NF-e emitidas
+  para o meu CNPJ" (usa o mesmo certificado A1) e Salvar.
+- O servidor consulta sozinho. Quando não há nota nova, a SEFAZ só deixa
+  consultar de novo depois de 1 hora (o sistema respeita isso sozinho).
+- A nota chega primeiro como resumo. Com "Dar ciência sozinho" ligado, o sistema
+  registra a "Ciência da operação" e a SEFAZ libera o XML completo.
+- Em Gestão > Entrada de nota aparecem as notas novas ("Pronta para entrada").
+  Toque em "Dar entrada": a nota abre igual a um XML escolhido no computador.
+- Nota cancelada pelo fornecedor aparece como "Cancelada" e não entra.
+- Os XMLs recebidos ficam em dados\xml\recebidas.
+
+IBPT: TABELA + API (tributos aproximados na nota)
+------------------------------------------------
+Configurações > Fiscal > "Tributos aproximados (IBPT: tabela + API)":
+- A tabela do IBPT é baixada pelo sistema e se atualiza sozinha.
+- Cole o TOKEN do IBPT (deolhonoimposto.ibpt.org.br, entrando com o CNPJ da
+  empresa) e escolha de onde buscar:
+  Automático (recomendado): tabela primeiro; a API completa os NCMs que não
+    estão na tabela e cobre a tabela vencida.
+  API primeiro: API, e a tabela como reserva.
+  Só a tabela / Desligado.
+- "Testar o token" mostra os percentuais de um NCM da loja.
+- "Buscar agora o que falta" consulta na hora os NCMs da loja que precisam.
+  O sistema também faz isso sozinho a cada 6 horas.
+- Cada resposta da API fica guardada até o fim da vigência: a venda nunca
+  espera a internet. Na hora de emitir, se um NCM novo ainda não foi
+  consultado, o sistema tenta a API por no máximo 2,5 segundos.
+- A nota mostra a fonte e a chave de onde veio o percentual.
+- O token fica só neste computador (não vai para o Supabase nem aparece no
+  log). A consulta é feita pelo computador da loja porque o IBPT recusa
+  servidores na nuvem.
+
+GESTÃO ORGANIZADA (menu em grupos e Configurações)
+--------------------------------------------------
+- A Gestão abre no INÍCIO: vendas de hoje (com comparação com ontem até a
+  mesma hora), ticket médio, balcão x app, gráfico dos últimos 7 dias, o que
+  precisa de atenção (contingência, certificado vencendo, contas vencidas,
+  validade, estoque baixo, pedidos do app, backup) e a lista do que falta
+  configurar na loja.
+- Menu em grupos: Vendas, Estoque, Financeiro, Notas fiscais e Configurações.
+- NOTAS FISCAIS (dia a dia): NFC-e (notas emitidas, contingência, cancelar,
+  inutilizar) e NF-e modelo 55 (venda para empresa e devolução).
+- CONFIGURAÇÕES tem sub-telas: Loja · Fiscal (certificado digital, dados da
+  nota, tabela IBPT) · App do cliente · Horário e entrega · Pagamentos ·
+  Equipe e regras · Entregadores · Rede · Backup.
+- Horário em 24 h, caixas de marcar alinhadas, botão "Escolher arquivo" em
+  português e telas que cabem no celular.
+
+BACKUP (Configurações > Backup)
+-------------------------------
+- Todo dia o sistema guarda sozinho uma cópia (30 dias) neste computador.
+- "Cópia em outra pasta": escolha um pendrive (ex.: E:\) ou uma pasta do
+  Google Drive / OneDrive. Cada backup novo vai para lá junto com os XMLs das
+  notas (guardar 5 anos). Ficam os últimos 15. Se o pendrive sair, a tela e o
+  Início avisam.
+- "Fazer backup agora", "Baixar" (só gerente) e "Restaurar" (digite
+  RESTAURAR). Antes de restaurar, o sistema guarda o estado atual
+  ("antes-de-restaurar"). O servidor reinicia sozinho em alguns segundos.
+- Trocar de computador: instale no novo, aponte a mesma pasta (pendrive com a
+  cópia) e clique em Restaurar no backup mais novo.
+
+APP DO CLIENTE: OLHAR ANTES DE SE CADASTRAR
+-------------------------------------------
+- O cliente já abre na loja, vê os produtos e monta o carrinho sem cadastro.
+- O cadastro (nome, WhatsApp, endereço e GPS) é pedido na hora de enviar o
+  pedido. O carrinho fica guardado e, depois do cadastro, ele volta direto
+  para o carrinho.
+
+MERCADO PAGO (Pix no caixa, maquininha Point e pagamento pelo app)
+-----------------------------------------------------------------
+1. Rode de novo o supabase.sql no Supabase (fase 9).
+2. Pegue o Access Token: mercadopago.com.br/developers/panel/app > Criar
+   aplicação > Credenciais de produção > Access Token (APP_USR-...).
+   O token fica guardado SÓ no computador servidor. Não vai para o Supabase,
+   nem para o app, nem para os caixas da rede. Não envie para ninguém.
+3. Gestão > Mercado Pago: cole o token, escolha o que usar e Salvar.
+- Pix no caixa: na tela de pagamento, "Pix Mercado Pago" (F7). Aparece o QR
+  com o valor exato e a venda finaliza sozinha quando o Pix cai.
+- Maquininha Point: "Buscar maquininhas", escolha, "Colocar no modo PDV" e
+  Salvar. No pagamento, "Maquininha" (F8): 1 Débito, 2 Crédito (escolha as
+  parcelas), 3 o cliente escolhe na maquininha. Aprovou, a venda finaliza.
+  Esc cancela a cobrança. Modelos: Point Smart (N950, Move2500, MP35P,
+  A910, Q92), com internet.
+- App do cliente: ligue "Cliente pode pagar pelo app". Aparece a opção
+  "Pagar agora pelo app (Pix ou cartão)". O cliente recebe o Pix copia e cola
+  e o botão de cartão. O pedido só toca no caixa DEPOIS de pago ("PAGO NO
+  APP"). Se não pagar no prazo, o pedido cancela sozinho e o estoque volta.
+  O cliente pode trocar para "pagar na entrega" enquanto não pagou.
+  ATENÇÃO: o computador servidor precisa estar ligado e com internet para
+  gerar e conferir esses pagamentos.
+- Cancelou pedido do app já pago, ou cancelou venda paga pelo Mercado Pago:
+  o dinheiro volta sozinho para o cliente (fica anotado no log.txt).
+- Na NFC-e: Pix sai como Pix (17), cartão como débito (04) ou crédito (03).
+
+INFINITEPAY (pagamento pelo app) - e o cliente escolhe
+-------------------------------------------------------
+1. Rode de novo o supabase.sql no Supabase (fase 10).
+2. Gestão > Ajustes da loja: preencha o endereço do site do app (GitHub).
+   É para onde o cliente volta depois de pagar.
+3. Gestão > Pagamentos > InfinitePay: InfiniteTag da loja (o seu $nome no app
+   da InfinitePay) e, de preferência, a API Key (inchk_...). Ligue "Cliente
+   pode pagar pelo app com a InfinitePay" e Salvar.
+   Com a API Key o link vence junto com o prazo e só aceita um pagamento.
+- Mercado Pago e InfinitePay ligados juntos: no app o cliente escolhe
+  "Pagar agora com Mercado Pago" ou "Pagar agora com InfinitePay" (ou pagar na
+  entrega). Só um ligado: aparece "Pagar agora pelo app".
+- O cliente paga na página da InfinitePay (Pix ou cartão até 12x) e volta
+  para o app. O computador da loja confere direto com a InfinitePay antes de
+  mandar o pedido para o caixa ("PAGO NO APP (InfinitePay)").
+- A InfinitePay não deixa devolver pelo sistema: se cancelar pedido já pago,
+  o PDV avisa e você devolve pelo app da InfinitePay.
+- No caixa: a InfinitePay não tem integração de maquininha com PDV. Use a
+  maquininha dela normalmente e lance Débito ou Crédito.
+
+DEPARTAMENTOS E CATEGORIAS (padrão de supermercado)
+---------------------------------------------------
+Classificação: DEPARTAMENTO > CATEGORIA > MARCA > PRODUTO.
+Exemplo: BEBIDAS > REFRIGERANTES > Coca-Cola > COCA COLA 2L.
+- Já vem com 12 departamentos e 61 categorias (Mercearia básica, Matinais e
+  doces, Bebidas, Frios e laticínios, Açougue, Hortifruti, Padaria, Congelados,
+  Limpeza, Higiene e perfumaria, Bazar e utilidades, Pet).
+- Gestão > Departamentos:
+  "Estrutura": renomeie, acrescente, remova ou mude a ordem (a ordem é a do app).
+    Renomear leva o nome novo para os produtos. Clique em "Salvar estrutura".
+  "Classificar produtos": o sistema reconhece pelo nome (CAFE PILAO > Matinais e
+    doces > Café). Mostra a prévia; nada muda antes de "Aplicar marcados".
+    O que ele não reconhecer, classifique no cadastro do produto.
+  "Vendas e margem": venda, participação, lucro e margem de cada departamento
+    e categoria no período. Toque no departamento para ver as categorias.
+    A margem usa o custo do produto: produto sem custo fica fora da margem.
+- No cadastro (Gestão e PDV): escolha o departamento e depois a categoria.
+  Digitando o nome, o sistema já sugere os dois. "Nova categoria" entra no
+  departamento escolhido.
+- No app do cliente: os departamentos aparecem como botões no topo e a lista
+  de categorias mostra só as daquele departamento.
+- Não precisa rodar SQL no Supabase para isso.
+
+
+PARCEIROS (PRODUTOS DE OUTRA LOJA/CNPJ VENDIDOS NO SEU CATÁLOGO)
+---------------------------------------------------------------
+Serve para vender no seu app produtos de um parceiro (açougue, padaria,
+farmácia...) que fica em outro endereço e tem outro CNPJ.
+1. No Supabase, rode o supabase.sql novo (FASE 11 cria as tabelas de parceiros).
+2. Gestão > Configurações > Parceiros > "Novo parceiro": nome, CNPJ, endereço,
+   localização (cole o link do Google Maps), telefone, comissão da loja (%) e
+   quem entrega: "o entregador da loja busca" ou "o parceiro entrega".
+3. Toque em "Gerar código" e mande o link/QR ao parceiro. Ele abre no celular
+   (SEU-SITE/parceiro/), instala o app verde "Parceiro" e fica conectado.
+4. No cadastro do produto, em "Estoque", escolha "Parceiro: nome". Pronto: esse
+   produto passa a ser do parceiro.
+Como funciona o pedido:
+- O cliente compra tudo junto e paga para a LOJA.
+- Quando você confirma o pedido, o parceiro recebe um alarme no app com SÓ os
+  produtos dele. Ele aceita, separa e marca "Pronto" (ou "Saiu"/"Entreguei" se
+  ele mesmo entrega). Pode digitar o número da nota dele.
+- O entregador vê no app dele a parada "Buscar em ..." com rota e botão
+  "Peguei no parceiro". No PDV, o pedido mostra a situação do parceiro.
+Nota fiscal:
+- A sua NFC-e sai SÓ com os seus produtos (pagamento e troco ajustados).
+- No cupom, embaixo, sai o bloco "PRODUTOS DO PARCEIRO - SEM VALOR FISCAL".
+  A nota desses itens é emitida pelo parceiro, no sistema dele.
+- Venda só com produtos de parceiro: não emite NFC-e, sai o comprovante.
+Acerto (repasse):
+- Gestão > Financeiro > Repasses a parceiros: quanto vendeu, comissão, quanto
+  já pagou e o saldo. "Registrar pagamento" quando pagar o parceiro.
+- O parceiro vê o mesmo valor na aba "Repasses" do app dele.
+- No site, envie também a pasta "parceiro" (o botão "Baixar site" já inclui).
+
+
+ARQUIVOS
+--------
+server.js            o servidor (banco local + sincronização + notas)
+caixa.js             o modo CAIXA da rede (repassa para o servidor, imprime local)
+impressao.js         impressão direta na térmica (ESC/POS)
+fiscal.js            NFC-e e NF-e 55 (monta, assina, envia, contingência, eventos)
+sefaz.json           endereços das SEFAZ das 27 UFs e do QR Code (tabela do projeto NFePHP, LGPL)
+lib\forge.js         leitura do certificado A1 (biblioteca livre node-forge, num arquivo só)
+lib\municipios.json.gz  municípios do IBGE (a tabela IBPT é baixada pelo sistema)
+public\              as telas (pdv.html, gestao.html, parear.html, configurar.html)
+public\site\         modelo do site do catálogo (a Gestão gera o .zip de cada loja)
+manifest.json        lista de conferência dos arquivos (segurança)
+instalar.bat         instala ou troca o modo (servidor / servidor + caixas / caixa)
+atualizar.bat        atualiza mantendo o modo e os dados
+desinstalar.bat      remove o programa (os dados ficam, a menos que peça para apagar)
+iniciar.vbs          liga o servidor escondido (a tarefa do Windows usa ele)
+parar.bat            desliga o servidor (pede administrador)
+reiniciar.vbs        religa o PDV e abre a tela (atalho "Reiniciar PDV")
+abrir-pdv.vbs        abre o PDV (é o que o atalho usa)
+diagnostico.bat      mostra a situação e o fim do log (para mandar ao suporte)
+supabase.sql         rodar no Supabase
+
+Depois de instalado:
+C:\Program Files\MercadoOnline        o programa (e o node\ próprio do PDV)
+C:\ProgramData\MercadoOnline\dados    banco, backups, XMLs, certificado, log.txt (NÃO APAGAR)
+
+Endereço do PDV: http://localhost:7070/pdv.html. Se o Windows bloquear essa porta,
+o servidor usa outra sozinho e anota em C:\ProgramData\MercadoOnline\pub\porta.txt;
+o atalho já abre na porta certa.

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conectar este caixa</title><link rel="icon" href="favicon-loja-64.png">
+<style>
+:root{color-scheme:light;--bg:#F4F6F9;--card:#fff;--tx:#1B2433;--mu:#667185;--bd:#E2E7EE;--ac:#1E4FD8;--ac2:#EAF0FF;--ok:#178A4E;--rd:#C9302C}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 "Segoe UI",system-ui,sans-serif;display:flex;justify-content:center;padding:6vh 16px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:28px;max-width:560px;width:100%}
+h1{margin:0 0 4px;font-size:24px}p{color:var(--mu);margin:6px 0 16px}
+.passo{display:flex;gap:12px;align-items:flex-start;margin:18px 0 8px}.passo b{background:var(--ac);color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex:none}
+button{font:inherit;cursor:pointer}.b{min-height:54px;padding:0 20px;border:0;border-radius:12px;background:var(--ac);color:#fff;font-weight:700;font-size:17px;width:100%}
+.b.s{background:var(--card);color:var(--tx);border:1.5px solid var(--bd)}.b:disabled{opacity:.5}
+.sv{display:flex;flex-direction:column;gap:8px;margin:8px 0}.sv button{min-height:60px;border:2px solid var(--bd);background:var(--card);border-radius:12px;text-align:left;padding:8px 14px;color:var(--tx)}
+.sv button.on{border-color:var(--ac);background:var(--ac2)}.sv small{display:block;color:var(--mu)}
+input{font:inherit;width:100%;padding:12px 14px;border:1.5px solid var(--bd);border-radius:12px;margin:4px 0 10px}
+.cod{font-size:34px;letter-spacing:.3em;text-align:center;font-weight:700}
+.err{color:var(--rd);font-weight:600;min-height:22px}.ok{color:var(--ok);font-weight:700}
+</style></head><body><div class="c" id="c">
+<h1>Conectar este caixa</h1><p>Este computador vai usar o sistema do <b>computador servidor</b> da loja (o principal). É preciso fazer só uma vez.</p>
+<div class="passo"><b>1</b><div><b style="background:none;color:inherit;width:auto;height:auto">Procurar o servidor</b><br><span style="color:var(--mu)">O servidor precisa estar ligado e na mesma rede (mesmo Wi-Fi ou cabo).</span></div></div>
+<button class="b s" id="bp" onclick="procurar()">🔍 Procurar o servidor da loja</button>
+<div class="sv" id="sv"></div>
+<div id="manual" style="display:none"><input id="mu" placeholder="Ou digite o endereço, ex.: 192.168.0.10:7070"></div>
+<div class="passo"><b>2</b><div><b style="background:none;color:inherit;width:auto;height:auto">Código de 6 números</b><br><span style="color:var(--mu)">No servidor: Gestão › Rede e segurança › "Parear novo caixa".</span></div></div>
+<input id="cod" class="cod" inputmode="numeric" maxlength="6" placeholder="000000">
+<label>Nome deste caixa</label><input id="nm" value="Caixa 2">
+<div class="err" id="err"></div>
+<button class="b" id="bc" onclick="conectar()">Conectar</button>
+</div>
+<script>
+const $=s=>document.querySelector(s);let SRV='';
+async function procurar(){
+  $('#bp').disabled=true;$('#bp').textContent='Procurando na rede… (uns 10 segundos)';$('#err').textContent='';
+  try{const l=await fetch('/api/caixa/procurar').then(r=>r.json());
+    $('#sv').innerHTML=l.length?l.map((s,i)=>`<button onclick="esc(${i},this)" data-u="${s.url}"><b>${s.loja||'Servidor da loja'}</b><small>${s.nome||''} · ${s.url.replace('http://','')}</small></button>`).join(''):'<p style="margin:0">Nenhum servidor encontrado. Confira se o computador principal está ligado e na mesma rede, ou digite o endereço abaixo.</p>';
+    if(l.length==1)esc(0,$('#sv button'));$('#manual').style.display=l.length?'none':'block';
+  }catch(e){$('#err').textContent='Não foi possível procurar.'}
+  $('#bp').disabled=false;$('#bp').textContent='🔍 Procurar de novo';
+}
+function esc(i,b){document.querySelectorAll('#sv button').forEach(x=>x.classList.toggle('on',x==b));SRV=b.dataset.u;$('#cod').focus()}
+async function conectar(){
+  let u=SRV||($('#mu').value.trim()?'http://'+$('#mu').value.trim().replace(/^https?:\/\//,''):'');
+  if(u&&!/:\d+$/.test(u))u+=':7070';
+  if(!u)return $('#err').textContent='Procure o servidor (passo 1).';
+  if(!/^\d{6}$/.test($('#cod').value.trim()))return $('#err').textContent='Digite o código de 6 números.';
+  $('#bc').disabled=true;$('#err').textContent='';
+  try{const r=await fetch('/api/caixa/parear',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:u,codigo:$('#cod').value.trim(),nome:$('#nm').value})});const j=await r.json();
+    if(!r.ok)throw new Error(j.error||'Não conectou.');
+    $('#c').innerHTML=`<h1 class="ok">✅ Caixa conectado</h1><p>Este computador agora é o <b>${j.nome}</b>. Abrindo o PDV…</p>`;setTimeout(()=>location.href='/pdv.html',1500);
+  }catch(e){$('#err').textContent=e.message;$('#bc').disabled=false}
+}
+fetch('/api/caixa/info').then(r=>r.json()).then(i=>{if(i.pareado)location.href='/pdv.html'}).catch(()=>{});
+procurar();
+</script></body></html>

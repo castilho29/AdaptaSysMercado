@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mercado Online · primeira configuração</title><link rel="icon" href="favicon-loja-64.png">
+<style>
+:root{color-scheme:light;--bg:#F4F6F9;--card:#fff;--tx:#1B2433;--mu:#667185;--bd:#E2E7EE;--ac:#1E4FD8;--ac2:#EAF0FF;--ok:#178A4E;--ok2:#E6F6EE;--rd:#C9302C}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 "Segoe UI",system-ui,sans-serif;display:flex;justify-content:center;padding:5vh 16px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:28px;max-width:620px;width:100%}
+.marca{display:flex;align-items:center;gap:12px;margin-bottom:6px}.marca img{width:48px;height:48px;border-radius:12px}
+h1{margin:0;font-size:24px}p{color:var(--mu);margin:6px 0 14px}
+.passo{border:1.5px solid var(--bd);border-radius:14px;padding:16px 18px;margin:14px 0}.passo.feito{border-color:var(--ok);background:var(--ok2)}.passo.off{opacity:.5;pointer-events:none}
+.passo h2{margin:0 0 4px;font-size:18px;display:flex;gap:10px;align-items:center}.passo h2 b{background:var(--ac);color:#fff;border-radius:50%;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+.passo.feito h2 b{background:var(--ok)}
+label{display:block;font-weight:600;margin-top:10px;font-size:14px}
+input{font:inherit;width:100%;padding:12px 14px;border:1.5px solid var(--bd);border-radius:12px;margin:4px 0 0}
+.b{font:inherit;min-height:50px;padding:0 20px;border:0;border-radius:12px;background:var(--ac);color:#fff;font-weight:700;font-size:16px;width:100%;margin-top:14px;cursor:pointer}.b:disabled{opacity:.5}
+.b.s{background:var(--card);color:var(--tx);border:1.5px solid var(--bd)}
+.err{color:var(--rd);font-weight:600;min-height:20px;margin-top:8px}.ok{color:var(--ok);font-weight:700}
+details{margin-top:10px;font-size:14px;color:var(--mu)}summary{cursor:pointer;font-weight:600;color:var(--ac)}ol{padding-left:20px;margin:8px 0}li{margin:4px 0}code{background:var(--bg);padding:1px 6px;border-radius:6px;font-size:13px}
+</style></head><body><div class="c" id="c">
+<div class="marca"><img src="icon-loja-192.png" alt=""><div><h1>Mercado Online</h1><span style="color:var(--mu)">Primeira configuração deste computador</span></div></div>
+<p>Cada empresa tem o <b>próprio banco no computador</b> (vende sem internet) e o <b>próprio banco online</b> (Supabase), que guarda a cópia e liga o catálogo do app. São só dois passos, feitos uma vez.</p>
+
+<div class="passo" id="p1"><h2><b>1</b> Banco online da empresa (Supabase)</h2>
+ <span style="color:var(--mu);font-size:14px">No Supabase: <b>Project Settings › API</b> (ou "Data API"): copie a <b>Project URL</b> e a chave <b>anon public</b>.</span>
+ <label>Endereço do projeto (Project URL)</label><input id="u" placeholder="https://abcdefghijklmnopqrst.supabase.co" autocomplete="off">
+ <label>Chave pública (anon / publishable)</label><input id="k" placeholder="eyJhbGciOi..." autocomplete="off">
+ <div class="err" id="e1"></div>
+ <button class="b" id="b1" onclick="salvar()">Testar e salvar</button>
+ <details><summary>Ainda não tem o Supabase da empresa? Veja como criar (10 minutos, grátis)</summary><ol>
+  <li>Entre em <b>supabase.com</b> › New project. Dê o nome da empresa, crie uma senha forte para o banco e escolha a região <b>South America (São Paulo)</b>.</li>
+  <li>Abra <b>SQL Editor</b> › New query, cole o arquivo <code>supabase.sql</code> (vem junto com o programa) e clique em <b>Run</b>.</li>
+  <li>Em <b>Authentication › Sign In / Providers</b>: ligue <b>"Allow anonymous sign-ins"</b> (cadastro do cliente no app sem senha) e, em Email, desligue "Confirm email".</li>
+  <li>Em <b>Authentication › Users › Add user</b>, crie o usuário do dono (e-mail e senha) e marque "Auto Confirm User".</li>
+  <li>No SQL Editor rode: <code>insert into admins(user_id) select id from auth.users where email='EMAIL-DO-DONO';</code></li>
+  <li>Volte aqui e cole a Project URL e a chave anon. <b>Nunca</b> use a chave "service_role".</li>
+ </ol></details>
+</div>
+
+<div class="passo off" id="p2"><h2><b>2</b> Conta do dono da loja</h2>
+ <span style="color:var(--mu);font-size:14px">O e-mail e a senha criados no Supabase. Só este primeiro acesso precisa de internet.</span>
+ <label>E-mail ou WhatsApp</label><input id="le" autocomplete="username">
+ <label>Senha</label><input id="lp" type="password" autocomplete="current-password" onkeydown="if(event.key=='Enter')entrar()">
+ <div class="err" id="e2"></div>
+ <button class="b" id="b2" onclick="entrar()">Entrar</button>
+</div>
+<div id="fim"></div>
+</div>
+<script src="config.js"></script>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const FAKE=(window.MO_CFG&&MO_CFG.fakeDom)||'@wa.mercadoonline.app';
+function authEmail(v){v=String(v).trim().toLowerCase();if(v.includes('@'))return v;let d=v.replace(/\D/g,'');if(d.length>=10&&d.length<=11)d='55'+d;return d.length>=12&&d.length<=13?d+FAKE:v}
+async function post(u,b){const r=await fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Erro '+r.status);return j}
+function passo(n){$('#p1').classList.toggle('feito',n>1);$('#p2').classList.toggle('off',n<2);$('#p2').classList.toggle('feito',n>2);if(n==2)setTimeout(()=>$('#le').focus(),50)}
+async function carregar(){
+  let st={};try{st=await fetch('/api/status',{cache:'no-store'}).then(r=>r.json())}catch(e){}
+  if(st.caixaRede){$('#c').innerHTML='<h1>Este computador é um caixa da rede</h1><p>A configuração é feita só no <b>computador servidor</b> da loja. Depois dela, este caixa funciona sozinho.</p><button class="b" onclick="location.href=\'/pdv.html\'">Tentar de novo</button>';return}
+  let s={};try{s=await fetch('/api/setup',{cache:'no-store'}).then(r=>r.json())}catch(e){}
+  if(s.sbUrl)$('#u').value=s.sbUrl;
+  if(s.configurado&&s.conectado)return pronto(s);
+  passo(s.configurado?2:1);
+}
+async function salvar(){
+  $('#b1').disabled=true;$('#e1').textContent='';$('#b1').textContent='Testando…';
+  try{await post('/api/setup',{sbUrl:$('#u').value,sbKey:$('#k').value});passo(2)}
+  catch(e){$('#e1').textContent=e.message}
+  $('#b1').disabled=false;$('#b1').textContent='Testar e salvar';
+}
+async function entrar(){
+  $('#b2').disabled=true;$('#e2').textContent='';
+  try{await post('/api/login',{email:authEmail($('#le').value),password:$('#lp').value});passo(3);pronto({})}
+  catch(e){$('#e2').textContent=e.message}
+  $('#b2').disabled=false;
+}
+function pronto(s){
+  $('#p1').classList.add('feito');$('#p2').classList.remove('off');$('#p2').classList.add('feito');
+  $('#fim').innerHTML=`<p class="ok" style="font-size:18px">✅ Tudo pronto${s.loja?' · '+esc(s.loja):''}</p><p>Próximos passos: no <b>PDV</b>, cadastre o gerente (nome e senha de 4 números). Depois, na <b>Gestão</b>: <b>Ajustes da loja</b> (nome, endereço, logotipo, Pix) e <b>Fiscal</b> (certificado e dados da nota).</p>
+  <button class="b" onclick="location.href='/pdv.html'">Abrir o PDV</button><button class="b s" onclick="location.href='/gestao.html#aj'">Abrir a Gestão</button>`;
+}
+carregar();
+</script></body></html>
