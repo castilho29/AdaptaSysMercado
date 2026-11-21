@@ -1,0 +1,84 @@
+name: Gerar instalador
+
+# Todo push na main gera o instalador (Actions > execucao > Artifacts).
+# Tag v* (ex.: v2026.11.21) tambem cria uma Release com o .exe para baixar.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  instalador:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Montar programa e site
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+          PRODUTO: ${{ vars.PRODUTO }}
+        run: node scripts/montar.js
+
+      - name: Zip de atualizacao e site
+        run: |
+          cd dist
+          zip -qr -X "Mercado-Online-$VERSAO.zip" MercadoOnline
+          (cd site && zip -qr -X "../catalogo-mercado-online-$VERSAO.zip" .)
+          cp ../app/supabase.sql .
+
+      - name: Embutir o Node.js 22 (Windows x64)
+        run: |
+          VER=$(curl -fsSL https://nodejs.org/dist/index.json | python3 -c "import json,sys;print(next(x['version'] for x in json.load(sys.stdin) if x['version'].startswith('v22.') and x['lts']))")
+          NOME="node-$VER-win-x64"
+          curl -fsSLo /tmp/node.zip "https://nodejs.org/dist/$VER/$NOME.zip"
+          curl -fsSL "https://nodejs.org/dist/$VER/SHASUMS256.txt" | grep " $NOME.zip$" | awk '{print $1"  /tmp/node.zip"}' | sha256sum -c -
+          unzip -q -j /tmp/node.zip "$NOME/node.exe" -d dist/MercadoOnline/node
+          echo "Node.js $VER embutido"
+
+      - name: Gerar o .exe
+        run: |
+          cd dist && zip -qr -X ../instalador/payload.zip MercadoOnline && cd ..
+          cp dist/versao.txt instalador/versao.txt
+          cd instalador
+          python3 mkres.py ../app/pdv.ico "$VERSAO" rsrc_windows_amd64.syso
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "../dist/MercadoOnline-Setup-$VERSAO.exe" .
+          ls -la ../dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MercadoOnline-${{ env.VERSAO }}
+          path: |
+            dist/MercadoOnline-Setup-*.exe
+            dist/Mercado-Online-*.zip
+            dist/catalogo-mercado-online-*.zip
+            dist/supabase.sql
+          retention-days: 30
+
+      - name: Publicar Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Mercado Online ${{ env.VERSAO }}
+          body: |
+            Instalar ou atualizar: baixe MercadoOnline-Setup-${{ env.VERSAO }}.exe e execute (mantem dados e vendas).
+            Atualizar sem o .exe: extraia o Mercado-Online-*.zip e rode atualizar.bat.
+            Site: suba o conteudo do catalogo-mercado-online-*.zip.
+            Supabase: se esta versao mudou o banco, rode o supabase.sql.
+          files: |
+            dist/MercadoOnline-Setup-*.exe
+            dist/Mercado-Online-*.zip
+            dist/catalogo-mercado-online-*.zip
+            dist/supabase.sql
