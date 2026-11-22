@@ -1,4 +1,4 @@
-// Instalador do Mercado Online: extrai o programa numa pasta temporária e roda o instalar.ps1
+// Instalador do AdaptaSys Mercado: extrai o programa numa pasta temporária e roda o instalar.ps1
 // (o mesmo instalador de sempre: pergunta o modo, mantém os dados, cria atalhos e a tarefa).
 // O manifesto embutido pede administrador (UAC) ao abrir.
 package main
@@ -30,7 +30,7 @@ func extrair(dest string) error {
 	for _, f := range z.File {
 		p := filepath.Join(dest, filepath.FromSlash(f.Name))
 		if !strings.HasPrefix(p, filepath.Clean(dest)+string(os.PathSeparator)) {
-			return fmt.Errorf("caminho inválido no pacote: %s", f.Name)
+			return fmt.Errorf("caminho invalido no pacote: %s", f.Name)
 		}
 		if f.FileInfo().IsDir() {
 			os.MkdirAll(p, 0o755)
@@ -65,15 +65,15 @@ func esperar() {
 
 func main() {
 	v := strings.TrimSpace(versao)
-	exec.Command("cmd", "/c", "title Instalar Mercado Online "+v).Run()
+	exec.Command("cmd", "/c", "title Instalar AdaptaSys Mercado "+v).Run()
 	fmt.Println()
 	fmt.Println("  ==============================================")
-	fmt.Println("    Instalar / atualizar o Mercado Online")
-	fmt.Println("    versao " + v)
+	fmt.Println("    Instalar / atualizar o AdaptaSys Mercado")
+	fmt.Println("    versao " + v + "  -  por AdaptaSys - Sistemas Inteligentes")
 	fmt.Println("  ==============================================")
-	base := filepath.Join(os.TempDir(), "MercadoOnline-Setup")
+	base := filepath.Join(os.TempDir(), "AdaptaSysMercado-Setup")
 	os.RemoveAll(base)
-	dir := filepath.Join(base, "MercadoOnline")
+	dir := filepath.Join(base, "AdaptaSysMercado")
 	fmt.Println("\n  Preparando os arquivos...")
 	if err := extrair(base); err != nil {
 		fmt.Println("  [!] Nao consegui extrair os arquivos:", err)
@@ -85,7 +85,7 @@ func main() {
 		ps = "powershell.exe"
 	}
 	args := []string{"-NoProfile", "-ExecutionPolicy", "Bypass", "-File", filepath.Join(dir, "instalar.ps1")}
-	args = append(args, os.Args[1:]...) // ex.: MercadoOnline-Setup.exe -Modo manter
+	args = append(args, os.Args[1:]...) // ex.: AdaptaSysMercado-Setup.exe -Modo manter
 	cmd := exec.Command(ps, args...)
 	cmd.Dir = dir
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr

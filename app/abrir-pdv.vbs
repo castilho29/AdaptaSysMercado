@@ -5,8 +5,8 @@ Set sh = CreateObject("WScript.Shell")
 dir = fso.GetParentFolderName(WScript.ScriptFullName)
 inst = fso.FileExists(dir & "\instalado.txt")
 If inst Then
-  pub = sh.ExpandEnvironmentStrings("%ProgramData%") & "\MercadoOnline\pub"
-  perfil = sh.ExpandEnvironmentStrings("%LocalAppData%") & "\MercadoOnline\navegador"
+  pub = sh.ExpandEnvironmentStrings("%ProgramData%") & "\AdaptaSysMercado\pub"
+  perfil = sh.ExpandEnvironmentStrings("%LocalAppData%") & "\AdaptaSysMercado\navegador"
 Else
   pub = dir & "\dados"
   perfil = dir & "\dados\navegador"
@@ -45,7 +45,7 @@ End Function
 porta = Achar()
 If porta = 0 Then
   If Not inst Then sh.Run "wscript.exe """ & dir & "\iniciar.vbs""", 0, False
-  If inst Then sh.Popup "Ligando o sistema do PDV... aguarde alguns segundos.", 3, "Mercado Online", 64
+  If inst Then sh.Popup "Ligando o sistema do PDV... aguarde alguns segundos.", 3, "AdaptaSys Mercado", 64
   For i = 1 To 120
     WScript.Sleep 500
     porta = Achar()
@@ -57,12 +57,12 @@ If porta = 0 Then
     r = MsgBox("O sistema do PDV nao respondeu." & vbCrLf & vbCrLf & _
       "Tente reiniciar o computador. Se continuar, abra o diagnostico" & vbCrLf & _
       "e mande um print da janela para o suporte." & vbCrLf & vbCrLf & _
-      "Abrir o diagnostico agora?", 4 + 48, "Mercado Online")
+      "Abrir o diagnostico agora?", 4 + 48, "AdaptaSys Mercado")
     If r = 6 Then sh.Run """" & dir & "\diagnostico.bat""", 1, False
   Else
     MsgBox "O servidor do PDV nao ligou." & vbCrLf & vbCrLf & _
       "Na pasta " & dir & " de dois cliques em diagnostico.bat" & vbCrLf & _
-      "e mande um print da janela que abrir.", 48, "Mercado Online"
+      "e mande um print da janela que abrir.", 48, "AdaptaSys Mercado"
   End If
   WScript.Quit
 End If
@@ -78,7 +78,7 @@ For Each c In Array(pf & "\Google\Chrome\Application\chrome.exe", pf86 & "\Googl
 Next
 ' Janela do PDV "presa": o navegador do PDV ficou rodando escondido (sem janela) e engole o pedido de abrir.
 ' Nesse caso fecha esses processos antes de abrir de novo. Se ja tem janela visivel, nao mexe.
-ps = "$p=Get-CimInstance Win32_Process | Where-Object { ($_.Name -eq 'chrome.exe' -or $_.Name -eq 'msedge.exe') -and $_.CommandLine -like '*MercadoOnline*navegador*' }; " & _
+ps = "$p=Get-CimInstance Win32_Process | Where-Object { ($_.Name -eq 'chrome.exe' -or $_.Name -eq 'msedge.exe') -and $_.CommandLine -like '*AdaptaSysMercado*navegador*' }; " & _
      "if($p){ $v=$p | ForEach-Object { Get-Process -Id $_.ProcessId -ErrorAction SilentlyContinue } | Where-Object { $_.MainWindowHandle -ne 0 }; " & _
      "if(-not $v){ $p | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; Start-Sleep -Milliseconds 900 } }"
 If nav <> "" Then sh.Run "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command """ & ps & """", 0, True

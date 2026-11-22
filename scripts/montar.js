@@ -5,7 +5,7 @@
  *   node scripts/montar.js
  *
  * Gera:
- *   dist/MercadoOnline/   programa pronto (com manifest.json: versão + SHA-256 de cada arquivo)
+ *   dist/AdaptaSysMercado/   programa pronto (com manifest.json: versão + SHA-256 de cada arquivo)
  *   dist/site/            catálogo + app do entregador + app do parceiro (para subir no site)
  *   dist/versao.txt       a versão gerada
  *
@@ -13,7 +13,7 @@
  *   VERSAO            força a versão (padrão: data/hora de Brasília, ex. 2026.11.21-2010)
  *   SUPABASE_URL      URL do Supabase da loja  -> vira dist/site/config.js
  *   SUPABASE_ANON_KEY chave PÚBLICA "anon" (nunca a service_role)
- *   PRODUTO           nome do produto no config.js (padrão "Mercado Online")
+ *   PRODUTO           nome do produto no config.js (padrão "AdaptaSys Mercado")
  */
 'use strict';
 const fs = require('fs'), path = require('path'), crypto = require('crypto'), { execFileSync } = require('child_process');
@@ -22,7 +22,7 @@ const RAIZ = path.resolve(__dirname, '..');
 const APP = path.join(RAIZ, 'app');
 const ASSETS = path.join(RAIZ, 'site-assets');
 const DIST = path.join(RAIZ, 'dist');
-const PROG = path.join(DIST, 'MercadoOnline');
+const PROG = path.join(DIST, 'AdaptaSysMercado');
 const SITE = path.join(DIST, 'site');
 
 const PULA_DIR = new Set(['dados', 'node', 'node_modules', 'navegador']);
@@ -75,9 +75,9 @@ if (url && key) {
   if (/service_role/.test(Buffer.from((key.split('.')[1] || ''), 'base64').toString())) {
     console.error('ERRO: SUPABASE_ANON_KEY é uma chave service_role. Use só a chave pública "anon".'); process.exit(1);
   }
-  const produto = (process.env.PRODUTO || 'Mercado Online').replace(/'/g, '');
+  const produto = (process.env.PRODUTO || 'AdaptaSys Mercado').replace(/'/g, '');
   fs.writeFileSync(path.join(SITE, 'config.js'),
-    `/* Mercado Online · configuração do catálogo (Supabase da loja; chave pública "anon") */\nwindow.MO_CFG = {\n  sbUrl: '${url}',\n  sbKey: '${key}',\n  fakeDom: '',\n  produto: '${produto}'\n};\n`);
+    `/* AdaptaSys Mercado · configuração do catálogo (Supabase da loja; chave pública "anon") */\nwindow.MO_CFG = {\n  sbUrl: '${url}',\n  sbKey: '${key}',\n  fakeDom: '',\n  produto: '${produto}'\n};\n`);
 } else {
   console.log('Aviso: sem SUPABASE_URL/SUPABASE_ANON_KEY -> o site sai sem config.js (gere pela Gestão > "Baixar site").');
 }

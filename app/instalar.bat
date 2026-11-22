@@ -1,6 +1,6 @@
 @echo off
 cd /d "%~dp0"
-title Instalar Mercado Online
+title Instalar AdaptaSys Mercado
 rem --- pede permissao de administrador sozinho ---
 net session >nul 2>&1
 if errorlevel 1 (
@@ -14,7 +14,7 @@ if errorlevel 1 (
 )
 echo.
 echo  ==============================================
-echo    Instalar / atualizar o Mercado Online
+echo    Instalar / atualizar o AdaptaSys Mercado
 echo  ==============================================
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0instalar.ps1" %*
 echo.

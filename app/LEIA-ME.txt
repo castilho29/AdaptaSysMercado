@@ -1,4 +1,4 @@
-﻿MERCADO ONLINE · PDV, GESTÃO E CATÁLOGO DO APP
+﻿ADAPTASYS MERCADO · PDV, GESTÃO E CATÁLOGO DO APP
 ==============================================
 
 O que é
@@ -151,8 +151,8 @@ INSTALAÇÃO (uma vez em cada computador)
      3 - CAIXA             um caixa a mais, que usa o servidor da loja
 
 4. O instalador faz tudo sozinho:
-   - copia o programa para C:\Program Files\MercadoOnline
-   - guarda os dados em C:\ProgramData\MercadoOnline\dados (pasta trancada)
+   - copia o programa para C:\Program Files\AdaptaSysMercado
+   - guarda os dados em C:\ProgramData\AdaptaSysMercado\dados (pasta trancada)
    - se já existia uma versão anterior (PDV-Mezzomo, ou pasta "dados" solta
      do zip), TRAZ TODAS AS VENDAS, PRODUTOS E NOTAS para o lugar novo
    - cria a tarefa do Windows que liga o PDV no boot, sem janela
@@ -213,7 +213,7 @@ Em cada caixa: instalar com a opção 3 (CAIXA). A tela "Conectar este caixa"
 - O servidor e os caixas precisam estar na mesma rede (mesmo roteador).
 - Antivírus com firewall próprio (Avast, Kaspersky, Norton...) às vezes
   bloqueia por conta própria: nesse caso, libere o "node.exe" de
-  C:\Program Files\MercadoOnline\node nesse antivírus.
+  C:\Program Files\AdaptaSysMercado\node nesse antivírus.
 
 
 IMPRESSORA BEMATECH (impressão direta, sem janela)
@@ -241,7 +241,7 @@ ABRE SOZINHO, EM TELA PRÓPRIA, SEM SENHA
 - Dentro do PDV, os botões "Pedidos" e "Gestão" trocam a tela na mesma janela
   (não abrem janelas novas). O mesmo botão vira "Voltar ao caixa" (ou Esc).
   A Gestão fica carregada por trás: voltar a ela é na hora, na mesma aba.
-- Na área de trabalho também há o atalho "Gestão Mercado Online", para usar a
+- Na área de trabalho também há o atalho "Gestão AdaptaSys Mercado", para usar a
   Gestão em outro momento sem abrir o caixa.
 - Entrar sem senha: Gestão > Regras > "Entrar sem senha (tocar no nome)".
   O PDV lembra quem estava no caixa e já abre com essa pessoa; para trocar, toque
@@ -300,7 +300,7 @@ No Caixa (F9) há o botão "Sincronizar agora".
 CUIDADOS IMPORTANTES
 --------------------
 - NÃO apague a pasta de dados. Ali estão as vendas ainda não enviadas.
-- Backup automático: C:\ProgramData\MercadoOnline\dados\backup (um arquivo por dia, guarda 30 dias).
+- Backup automático: C:\ProgramData\AdaptaSysMercado\dados\backup (um arquivo por dia, guarda 30 dias).
   Vale copiar essa pasta para um pendrive de vez em quando (precisa ser
   administrador para abrir a pasta).
 - Para sair da conta (botão ⎋), o servidor exige que tudo já tenha sido enviado.
@@ -312,11 +312,11 @@ CUIDADOS IMPORTANTES
 
 ATUALIZAR O PROGRAMA
 --------------------
-1. Clique com o botão direito no Mercado-Online.zip novo > "Extrair tudo".
+1. Clique com o botão direito no AdaptaSys-Mercado.zip novo > "Extrair tudo".
    (Não rode de dentro do zip sem extrair.)
-2. Abra a pasta extraída (MercadoOnline) e dê dois cliques em "atualizar.bat".
+2. Abra a pasta extraída (AdaptaSysMercado) e dê dois cliques em "atualizar.bat".
    (Mantém o mesmo modo, servidor ou caixa, e TODOS os dados.)
-   NÃO use o atualizar.bat de C:\Program Files\MercadoOnline: aquele é a versão
+   NÃO use o atualizar.bat de C:\Program Files\AdaptaSysMercado: aquele é a versão
    já instalada e não muda nada (agora ele avisa isso).
 3. A janela preta mostra "Versão instalada: X -> versão nova: Y" e, no fim,
    "ATUALIZADO". As telas do PDV e da Gestão abertas são fechadas e o PDV
@@ -453,7 +453,7 @@ No caixa:
   Gestão > Fiscal > Cancelar (pede o motivo). A SEFAZ só aceita pouco tempo
   depois da venda.
 - Para o contador: Gestão > Fiscal > "XMLs do mês" > Baixar .zip.
-- Os XMLs ficam em C:\ProgramData\MercadoOnline\dados\xml (por mês). Guarde por 5 anos (vão no backup).
+- Os XMLs ficam em C:\ProgramData\AdaptaSysMercado\dados\xml (por mês). Guarde por 5 anos (vão no backup).
 
 NF-e MODELO 55 (venda para empresa e devolução ao fornecedor)
 -------------------------------------------------------------
@@ -702,9 +702,9 @@ diagnostico.bat      mostra a situação e o fim do log (para mandar ao suporte)
 supabase.sql         rodar no Supabase
 
 Depois de instalado:
-C:\Program Files\MercadoOnline        o programa (e o node\ próprio do PDV)
-C:\ProgramData\MercadoOnline\dados    banco, backups, XMLs, certificado, log.txt (NÃO APAGAR)
+C:\Program Files\AdaptaSysMercado        o programa (e o node\ próprio do PDV)
+C:\ProgramData\AdaptaSysMercado\dados    banco, backups, XMLs, certificado, log.txt (NÃO APAGAR)
 
 Endereço do PDV: http://localhost:7070/pdv.html. Se o Windows bloquear essa porta,
-o servidor usa outra sozinho e anota em C:\ProgramData\MercadoOnline\pub\porta.txt;
+o servidor usa outra sozinho e anota em C:\ProgramData\AdaptaSysMercado\pub\porta.txt;
 o atalho já abre na porta certa.

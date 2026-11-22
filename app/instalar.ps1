@@ -1,6 +1,6 @@
-# Instalador do Mercado Online (PDV + Gestao), um por empresa
-#  - Programa em  C:\Program Files\MercadoOnline   (usuarios comuns so leem)
-#  - Dados em     C:\ProgramData\MercadoOnline\dados (so o Windows/SYSTEM e administradores)
+# Instalador do AdaptaSys Mercado (PDV + Gestao), um por empresa
+#  - Programa em  C:\Program Files\AdaptaSysMercado   (usuarios comuns so leem)
+#  - Dados em     C:\ProgramData\AdaptaSysMercado\dados (so o Windows/SYSTEM e administradores)
 #  - Atualiza sozinho uma instalacao antiga "PDV-Mezzomo" (traz dados, atalhos e tarefa)
 #  - O servidor roda como tarefa do Windows na conta SYSTEM, sem janela, desde o boot.
 #  - Modo "servidor com caixas na rede": cria sozinho a liberacao do firewall,
@@ -12,15 +12,18 @@ $ProgressPreference = 'SilentlyContinue'
 try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch { }
 
 $src   = Split-Path -Parent $MyInvocation.MyCommand.Path
-$app   = Join-Path $env:ProgramFiles 'MercadoOnline'
-$base  = Join-Path $env:ProgramData 'MercadoOnline'
+$app   = Join-Path $env:ProgramFiles 'AdaptaSysMercado'
+$base  = Join-Path $env:ProgramData 'AdaptaSysMercado'
 $appV  = Join-Path $env:ProgramFiles 'PDV-Mezzomo'      # nome antigo do programa
 $baseV = Join-Path $env:ProgramData 'PDV-Mezzomo'
+$appM  = Join-Path $env:ProgramFiles 'MercadoOnline'    # nome anterior: Mercado Online
+$baseM = Join-Path $env:ProgramData 'MercadoOnline'
 $dados = Join-Path $base 'dados'
 $pub   = Join-Path $base 'pub'
-$TASK  = 'Mercado Online'
-$FWNOME = 'Mercado Online (caixas da loja)'
+$TASK  = 'AdaptaSys Mercado'
+$FWNOME = 'AdaptaSys Mercado (caixas da loja)'
 $TASKV = 'PDV Mezzomo'
+$TASKM = 'Mercado Online'
 $PORTAS = @(7070, 8765, 18765, 28765, 5765, 3765, 9876, 6543)
 $ws = New-Object -ComObject WScript.Shell
 function Ok($t)   { Write-Host "  [ok] $t" -ForegroundColor Green }
@@ -32,7 +35,7 @@ if (-not $adm) { Aviso 'Precisa ser executado como administrador (use o instalar
 
 # ---------------------------------------------------------------- modo
 $atual = ''
-$instTxt = if (Test-Path "$app\instalado.txt") { "$app\instalado.txt" } elseif (Test-Path "$appV\instalado.txt") { "$appV\instalado.txt" } else { $null }
+$instTxt = if (Test-Path "$app\instalado.txt") { "$app\instalado.txt" } elseif (Test-Path "$appM\instalado.txt") { "$appM\instalado.txt" } elseif (Test-Path "$appV\instalado.txt") { "$appV\instalado.txt" } else { $null }
 if ($instTxt) {
   $l = Get-Content $instTxt | Where-Object { $_ -like 'modo=*' } | Select-Object -First 1
   if ($l) { $atual = $l.Substring(5).Trim() }
@@ -64,16 +67,16 @@ Write-Host ''
 function Ver-De($pasta) { try { return [string](Get-Content (Join-Path $pasta 'manifest.json') -Raw | ConvertFrom-Json).versao } catch { return '' } }
 if (-not (Test-Path (Join-Path $src 'server.js')) -or -not (Test-Path (Join-Path $src 'public\gestao.html')) -or -not (Test-Path (Join-Path $src 'manifest.json'))) {
   Aviso 'Esta pasta nao tem o programa completo.'
-  Info 'Extraia o arquivo Mercado-Online.zip inteiro antes (botao direito > Extrair tudo)'
-  Info 'e rode o atualizar.bat que esta DENTRO da pasta extraida (MercadoOnline).'
+  Info 'Extraia o arquivo AdaptaSys-Mercado.zip inteiro antes (botao direito > Extrair tudo)'
+  Info 'e rode o atualizar.bat que esta DENTRO da pasta extraida (AdaptaSysMercado).'
   exit 1
 }
 $verNova = Ver-De $src
-$verVelha = if (Test-Path (Join-Path $app 'manifest.json')) { Ver-De $app } elseif (Test-Path (Join-Path $appV 'manifest.json')) { Ver-De $appV } else { '' }
+$verVelha = if (Test-Path (Join-Path $app 'manifest.json')) { Ver-De $app } elseif (Test-Path (Join-Path $appM 'manifest.json')) { Ver-De $appM } elseif (Test-Path (Join-Path $appV 'manifest.json')) { Ver-De $appV } else { '' }
 $rodandoDaInstalada = (Test-Path $app) -and ((Resolve-Path $src).Path.TrimEnd('\') -ieq (Resolve-Path $app).Path.TrimEnd('\'))
 if ($rodandoDaInstalada -and $ModoPedido -eq 'manter') {
   Aviso 'Voce rodou o atualizar.bat da pasta onde o sistema JA esta instalado.'
-  Info 'Assim nada muda. Para atualizar: baixe o Mercado-Online.zip novo, extraia'
+  Info 'Assim nada muda. Para atualizar: baixe o AdaptaSys-Mercado.zip novo, extraia'
   Info 'e rode o atualizar.bat que esta dentro da pasta extraida.'
   Info "(versao instalada agora: $verVelha)"
   exit 1
@@ -85,7 +88,7 @@ Write-Host ''
 
 # ---------------------------------------------------------------- 1) parar o que estiver rodando
 function Parar-Pdv {
-  foreach ($t in @($TASK, $TASKV)) { try { Stop-ScheduledTask -TaskName $t -ErrorAction SilentlyContinue } catch { } }
+  foreach ($t in @($TASK, $TASKM, $TASKV)) { try { Stop-ScheduledTask -TaskName $t -ErrorAction SilentlyContinue } catch { } }
   Get-CimInstance Win32_Process | Where-Object {
     ($_.Name -eq 'wscript.exe' -and $_.CommandLine -like '*iniciar.vbs*') -or
     ($_.Name -eq 'cmd.exe' -and $_.CommandLine -like '*iniciar-servidor.bat*') -or
@@ -93,7 +96,7 @@ function Parar-Pdv {
   } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
   # fecha as janelas do PDV e da Gestao (senao elas continuam mostrando a versao antiga ate alguem recarregar)
   Get-CimInstance Win32_Process | Where-Object {
-    ($_.Name -eq 'chrome.exe' -or $_.Name -eq 'msedge.exe') -and ($_.CommandLine -like '*MercadoOnline*navegador*' -or $_.CommandLine -like '*PDV-Mezzomo*navegador*')
+    ($_.Name -eq 'chrome.exe' -or $_.Name -eq 'msedge.exe') -and ($_.CommandLine -like '*AdaptaSysMercado*navegador*' -or $_.CommandLine -like '*MercadoOnline*navegador*' -or $_.CommandLine -like '*PDV-Mezzomo*navegador*')
   } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
   Start-Sleep -Milliseconds 1200
 }
@@ -174,22 +177,25 @@ function Pasta-Antiga {
   foreach ($d in $c) { if ($d -and (Test-Path (Join-Path $d 'pdv.db')) -and ($d -ine $dados)) { return $d } }
   return $null
 }
-# instalacao anterior com o nome antigo (C:\ProgramData\PDV-Mezzomo): MOVE os dados para o lugar novo
-if ((Test-Path (Join-Path $baseV 'dados\pdv.db')) -and -not (Test-Path (Join-Path $dados 'pdv.db'))) {
-  Info 'Trazendo os dados da instalacao anterior (PDV-Mezzomo)...'
-  & robocopy.exe (Join-Path $baseV 'dados') "$dados" /E /XF porta.txt parar.flag /R:2 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
-  if ($LASTEXITCODE -ge 8 -or -not (Test-Path (Join-Path $dados 'pdv.db'))) { Aviso 'Falha ao copiar os dados anteriores. Nada foi apagado; chame o tecnico.'; exit 1 }
-  $perfV = Join-Path $env:LOCALAPPDATA 'PDV-Mezzomo\navegador'; $perfN = Join-Path $env:LOCALAPPDATA 'MercadoOnline\navegador'
-  if ((Test-Path $perfV) -and -not (Test-Path $perfN)) { & robocopy.exe "$perfV" "$perfN" /E /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null }
-  try { Rename-Item -Path (Join-Path $baseV 'dados') -NewName ('dados-ANTIGO-ja-copiado-' + (Get-Date -Format 'yyyyMMdd-HHmm')) } catch { }
-  Ok 'Dados da instalacao anterior trazidos (vendas, notas, certificado, configuracao).'
+# instalacao anterior com nome antigo (C:\ProgramData\MercadoOnline ou \PDV-Mezzomo): COPIA os dados para o lugar novo
+foreach ($ant in @(@($baseM, 'MercadoOnline'), @($baseV, 'PDV-Mezzomo'))) {
+  $bA = $ant[0]; $nA = $ant[1]
+  if ((Test-Path (Join-Path $bA 'dados\pdv.db')) -and -not (Test-Path (Join-Path $dados 'pdv.db'))) {
+    Info "Trazendo os dados da instalacao anterior ($nA)..."
+    & robocopy.exe (Join-Path $bA 'dados') "$dados" /E /XF porta.txt parar.flag /R:2 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+    if ($LASTEXITCODE -ge 8 -or -not (Test-Path (Join-Path $dados 'pdv.db'))) { Aviso 'Falha ao copiar os dados anteriores. Nada foi apagado; chame o tecnico.'; exit 1 }
+    $perfV = Join-Path $env:LOCALAPPDATA "$nA\navegador"; $perfN = Join-Path $env:LOCALAPPDATA 'AdaptaSysMercado\navegador'
+    if ((Test-Path $perfV) -and -not (Test-Path $perfN)) { & robocopy.exe "$perfV" "$perfN" /E /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null }
+    try { Rename-Item -Path (Join-Path $bA 'dados') -NewName ('dados-ANTIGO-ja-copiado-' + (Get-Date -Format 'yyyyMMdd-HHmm')) } catch { }
+    Ok "Dados da instalacao anterior ($nA) trazidos (vendas, notas, certificado, configuracao)."
+  }
 }
 $velha = Pasta-Antiga
 if ($velha -and -not (Test-Path (Join-Path $dados 'pdv.db'))) {
   Info "Trazendo vendas, produtos e notas de: $velha"
   & robocopy.exe "$velha" "$dados" /E /XD navegador /XF porta.txt parar.flag /R:2 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
   if ($LASTEXITCODE -ge 8 -or -not (Test-Path (Join-Path $dados 'pdv.db'))) { Aviso 'Falha ao copiar os dados antigos. Nada foi apagado; chame o tecnico.'; exit 1 }
-  $perfil = Join-Path $env:LOCALAPPDATA 'MercadoOnline\navegador'
+  $perfil = Join-Path $env:LOCALAPPDATA 'AdaptaSysMercado\navegador'
   if ((Test-Path (Join-Path $velha 'navegador')) -and -not (Test-Path $perfil)) {
     & robocopy.exe (Join-Path $velha 'navegador') "$perfil" /E /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
   }
@@ -227,19 +233,20 @@ Trancar $dados @('*S-1-5-18:(OI)(CI)F', '*S-1-5-32-544:(OI)(CI)F')
 Ok 'Pastas trancadas: usuarios comuns nao conseguem abrir, mudar nem apagar os dados.'
 
 # ---------------------------------------------------------------- 7) tarefa do Windows na conta SYSTEM
-foreach ($t in @($TASK, $TASKV)) { try { Unregister-ScheduledTask -TaskName $t -Confirm:$false -ErrorAction SilentlyContinue } catch { } }
+foreach ($t in @($TASK, $TASKM, $TASKV)) { try { Unregister-ScheduledTask -TaskName $t -Confirm:$false -ErrorAction SilentlyContinue } catch { } }
 $acao = New-ScheduledTaskAction -Execute "$env:WINDIR\System32\wscript.exe" -Argument "//B //Nologo `"$app\iniciar.vbs`"" -WorkingDirectory $app
 $gat1 = New-ScheduledTaskTrigger -AtStartup
 try { $gat2 = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 5) }
 catch { $gat2 = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 5) -RepetitionDuration (New-TimeSpan -Days 3650) }
 $quem = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
 $ajus = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) -MultipleInstances IgnoreNew
-Register-ScheduledTask -TaskName $TASK -Action $acao -Trigger @($gat1, $gat2) -Principal $quem -Settings $ajus -Description 'Mercado Online: servidor local do PDV (banco offline, notas e sincronizacao). Roda sem janela.' -Force | Out-Null
+Register-ScheduledTask -TaskName $TASK -Action $acao -Trigger @($gat1, $gat2) -Principal $quem -Settings $ajus -Description 'AdaptaSys Mercado: servidor local do PDV (banco offline, notas e sincronizacao). Roda sem janela.' -Force | Out-Null
 Ok 'O PDV liga sozinho junto com o Windows (antes de qualquer pessoa entrar) e se religa se parar.'
 
 # ---------------------------------------------------------------- 8) firewall (so no modo servidor + caixas)
 Get-NetFirewallRule -DisplayName 'PDV Mezzomo*' -ErrorAction SilentlyContinue | Remove-NetFirewallRule -ErrorAction SilentlyContinue
 Get-NetFirewallRule -DisplayName 'Mercado Online*' -ErrorAction SilentlyContinue | Remove-NetFirewallRule -ErrorAction SilentlyContinue
+Get-NetFirewallRule -DisplayName 'AdaptaSys Mercado*' -ErrorAction SilentlyContinue | Remove-NetFirewallRule -ErrorAction SilentlyContinue
 try { & netsh.exe advfirewall firewall delete rule name="PDV Mezzomo" | Out-Null } catch { }
 if ($Modo -eq 'rede') {
   New-NetFirewallRule -DisplayName $FWNOME -Description 'Permite que os caixas da rede local da loja usem o servidor do PDV. Vale so para a rede local e so para o programa do PDV.' `
@@ -251,7 +258,8 @@ if ($Modo -eq 'rede') {
 $udesk = [Environment]::GetFolderPath('Desktop'); $ustart = [Environment]::GetFolderPath('Startup')
 $cdesk = [Environment]::GetFolderPath('CommonDesktopDirectory'); $cstart = [Environment]::GetFolderPath('CommonStartup')
 foreach ($v in @("$ustart\Servidor PDV Mezzomo.lnk", "$ustart\Abrir PDV Mezzomo.lnk", "$ustart\iniciar-servidor*.lnk", "$udesk\PDV Mercado Mezzomo.lnk", "$udesk\Gestao Mercado Mezzomo.lnk", "$udesk\Reiniciar PDV.lnk",
-                 "$cdesk\PDV Mercado Mezzomo.lnk", "$cdesk\Gestao Mercado Mezzomo.lnk", "$cstart\Abrir PDV Mezzomo.lnk")) {
+                 "$cdesk\PDV Mercado Mezzomo.lnk", "$cdesk\Gestao Mercado Mezzomo.lnk", "$cstart\Abrir PDV Mezzomo.lnk",
+                 "$cdesk\PDV Mercado Online.lnk", "$cdesk\Gestao Mercado Online.lnk", "$cstart\Abrir PDV Mercado Online.lnk")) {
   Remove-Item $v -ErrorAction SilentlyContinue
 }
 $desk = [Environment]::GetFolderPath('CommonDesktopDirectory'); $start = [Environment]::GetFolderPath('CommonStartup')
@@ -261,10 +269,10 @@ function Atalho($arq, $argumentos, $desc, $icone) {
   if ($icone) { $s.IconLocation = $icone } elseif (Test-Path "$app\pdv.ico") { $s.IconLocation = "$app\pdv.ico" }
   $s.Save()
 }
-Atalho "$desk\PDV Mercado Online.lnk"    "`"$app\abrir-pdv.vbs`""             'PDV do balcao - Mercado Online' $null
-Atalho "$desk\Gestao Mercado Online.lnk" "`"$app\abrir-pdv.vbs`" gestao.html" 'Gestao da loja - Mercado Online' $null
+Atalho "$desk\PDV AdaptaSys Mercado.lnk"    "`"$app\abrir-pdv.vbs`""             'PDV do balcao - AdaptaSys Mercado' $null
+Atalho "$desk\Gestao AdaptaSys Mercado.lnk" "`"$app\abrir-pdv.vbs`" gestao.html" 'Gestao da loja - AdaptaSys Mercado' $null
 Atalho "$desk\Reiniciar PDV.lnk"          "`"$app\reiniciar.vbs`""             'Religa o PDV quando a tela travar (nenhuma venda se perde)' "$env:WINDIR\System32\shell32.dll,238"
-Atalho "$start\Abrir PDV Mercado Online.lnk"     "`"$app\abrir-pdv.vbs`""             'Abre a tela do PDV ao ligar o computador' $null
+Atalho "$start\Abrir PDV AdaptaSys Mercado.lnk"     "`"$app\abrir-pdv.vbs`""             'Abre a tela do PDV ao ligar o computador' $null
 Ok 'Atalhos PDV, Gestao e Reiniciar PDV na area de trabalho (para todos os usuarios).'
 
 try {
@@ -320,4 +328,5 @@ if ($Modo -eq 'rede') {
 # abre a tela SEM privilegio de administrador (pelo Explorer)
 # instalacao antiga com o nome PDV-Mezzomo: o programa velho sai (os dados ja vieram)
 if (Test-Path $appV) { Remove-Item $appV -Recurse -Force -ErrorAction SilentlyContinue; Ok 'Programa antigo (PDV-Mezzomo) removido.' }
-Start-Process -FilePath "$env:WINDIR\explorer.exe" -ArgumentList "`"$desk\PDV Mercado Online.lnk`""
+if (Test-Path $appM) { Remove-Item $appM -Recurse -Force -ErrorAction SilentlyContinue; Ok 'Programa com o nome anterior (Mercado Online) removido; os dados ja vieram.' }
+Start-Process -FilePath "$env:WINDIR\explorer.exe" -ArgumentList "`"$desk\PDV AdaptaSys Mercado.lnk`""

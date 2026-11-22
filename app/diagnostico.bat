@@ -1,6 +1,6 @@
 @echo off
 cd /d "%~dp0"
-title Diagnostico do Mercado Online
+title Diagnostico do AdaptaSys Mercado
 if exist "%~dp0instalado.txt" goto instalado
 echo Versao do Node:
 node --version
@@ -25,28 +25,28 @@ echo.
 "%~dp0node\node.exe" --version
 echo.
 echo --- tarefa do Windows ---
-schtasks /Query /TN "Mercado Online" /V /FO LIST | findstr /I "Status Ultimo Last Executar Run"
+schtasks /Query /TN "AdaptaSys Mercado" /V /FO LIST | findstr /I "Status Ultimo Last Executar Run"
 echo.
 echo --- porta ---
-type "%ProgramData%\MercadoOnline\pub\porta.txt"
+type "%ProgramData%\AdaptaSysMercado\pub\porta.txt"
 echo.
 echo --- o servidor esta respondendo? ---
-powershell -NoProfile -Command "try { $p=(Get-Content \"$env:ProgramData\MercadoOnline\pub\porta.txt\" -Raw).Trim(); $r=Invoke-RestMethod -UseBasicParsing -Uri \"http://127.0.0.1:$p/api/status\" -TimeoutSec 4; 'SIM, porta ' + $p + ', versao ' + $r.versao } catch { 'NAO: ' + $_.Exception.Message }"
+powershell -NoProfile -Command "try { $p=(Get-Content \"$env:ProgramData\AdaptaSysMercado\pub\porta.txt\" -Raw).Trim(); $r=Invoke-RestMethod -UseBasicParsing -Uri \"http://127.0.0.1:$p/api/status\" -TimeoutSec 4; 'SIM, porta ' + $p + ', versao ' + $r.versao } catch { 'NAO: ' + $_.Exception.Message }"
 echo.
 echo --- teste: ligar o servidor e ver se da erro ---
-set "PDV_DATA=%ProgramData%\MercadoOnline\dados"
-set "PDV_PUB=%ProgramData%\MercadoOnline\pub"
+set "PDV_DATA=%ProgramData%\AdaptaSysMercado\dados"
+set "PDV_PUB=%ProgramData%\AdaptaSysMercado\pub"
 set "PDV_SO_TESTAR=1"
 "%~dp0node\node.exe" --no-warnings "%~dp0server.js"
 set "PDV_SO_TESTAR="
 echo.
-if exist "%ProgramData%\MercadoOnline\dados\erro-ao-ligar.txt" (
+if exist "%ProgramData%\AdaptaSysMercado\dados\erro-ao-ligar.txt" (
   echo --- ERRO DA ULTIMA VEZ QUE TENTOU LIGAR ---
-  type "%ProgramData%\MercadoOnline\dados\erro-ao-ligar.txt"
+  type "%ProgramData%\AdaptaSysMercado\dados\erro-ao-ligar.txt"
   echo.
 )
 echo --- ultimas linhas do log ---
-powershell -NoProfile -Command "Get-Content \"$env:ProgramData\MercadoOnline\dados\log.txt\" -Tail 40 -Encoding UTF8"
+powershell -NoProfile -Command "Get-Content \"$env:ProgramData\AdaptaSysMercado\dados\log.txt\" -Tail 40 -Encoding UTF8"
 echo.
 echo Tire um print desta janela e mande para o suporte.
 pause

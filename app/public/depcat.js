@@ -1,4 +1,4 @@
-/* Mercado Online · estrutura de DEPARTAMENTO › CATEGORIA (padrão de gerenciamento por categorias do varejo)
+/* AdaptaSys Mercado · estrutura de DEPARTAMENTO › CATEGORIA (padrão de gerenciamento por categorias do varejo)
    e classificação automática do produto pelo nome. Usado pelo servidor, pela Gestão e pelo PDV. */
 (function (g) {
   /* [departamento, [[categoria, [palavras do nome que indicam a categoria]], ...]] */

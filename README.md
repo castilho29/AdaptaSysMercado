@@ -1,11 +1,11 @@
-# Mercado Online
+# AdaptaSys Mercado
 
 PDV + Gestão (servidor local no Windows), catálogo/app do cliente, app do entregador e app do parceiro.
 
 ## Pastas
 
 ```
-app/                     o programa (é o que vai para C:\Program Files\MercadoOnline)
+app/                     o programa (é o que vai para C:\Program Files\AdaptaSysMercado)
   server.js              servidor local (banco SQLite + sincronização com o Supabase)
   fiscal.js              NFC-e / NF-e, DANFE, IBPT
   mp.js  ip.js           Mercado Pago e InfinitePay
@@ -21,9 +21,8 @@ app/                     o programa (é o que vai para C:\Program Files\MercadoO
   supabase.sql           banco online (rodar no SQL Editor do Supabase)
   LEIA-ME.txt            manual da loja
 site-assets/             ícones e manifests do site (catálogo, entregador, parceiro)
-instalador/              script do Inno Setup que gera o .exe
+instalador/              gerador do .exe (Go: main.go + mkres.py para ícone/UAC)
 scripts/montar.js        monta dist/ (programa com manifest.json + site)
-scripts/gerar-instalador.bat   gera o .exe no seu PC (opcional)
 .github/workflows/       GitHub Actions: gera o .exe sozinho
 ```
 
@@ -42,9 +41,9 @@ O que sai:
 
 | Arquivo | Para quê |
 |---|---|
-| `MercadoOnline-Setup-<versão>.exe` | instala ou atualiza (mantém dados). Já traz o Node.js, não precisa de internet |
-| `Mercado-Online-<versão>.zip` | atualização manual: extrair e rodar `atualizar.bat` |
-| `catalogo-mercado-online-<versão>.zip` | subir no site (catálogo + entregador + parceiro) |
+| `AdaptaSysMercado-Setup-<versão>.exe` | instala ou atualiza (mantém dados). Já traz o Node.js, não precisa de internet |
+| `AdaptaSys-Mercado-<versão>.zip` | atualização manual: extrair e rodar `atualizar.bat` |
+| `catalogo-adaptasys-mercado-<versão>.zip` | subir no site (catálogo + entregador + parceiro) |
 | `supabase.sql` | rodar no Supabase quando a versão mudar o banco |
 
 A versão é a data e a hora de Brasília (ex.: `2026.11.21-2010`). É ela que aparece no menu da Gestão.
@@ -70,8 +69,13 @@ Os tokens do Mercado Pago, da InfinitePay e do IBPT ficam só no banco local de 
 
 Recomendado: deixe o repositório **privado**.
 
-## Gerar no seu PC (sem GitHub)
+## Gerar o .exe sem GitHub (Linux/Mac/Windows com Go 1.24 e Node 22)
 
-Precisa do Node.js 22 e do [Inno Setup 6](https://jrsoftware.org/isdl.php). Depois rode `scripts\gerar-instalador.bat`.
-
-Nesse caso o .exe sai sem o Node.js embutido: o instalador baixa o Node.js na primeira instalação.
+```
+node scripts/montar.js
+cd dist && zip -qr ../instalador/payload.zip AdaptaSysMercado && cd ..
+cp dist/versao.txt instalador/
+cd instalador && python3 mkres.py ../app/pdv.ico "$(cat versao.txt)" rsrc_windows_amd64.syso
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o AdaptaSysMercado-Setup.exe .
+```
+Sem a pasta `node` no pacote, o instalador baixa o Node.js na primeira instalação.

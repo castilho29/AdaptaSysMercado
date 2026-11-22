@@ -4,10 +4,10 @@ Set fso = CreateObject("Scripting.FileSystemObject")
 Set sh = CreateObject("WScript.Shell")
 dir = fso.GetParentFolderName(WScript.ScriptFullName)
 inst = fso.FileExists(dir & "\instalado.txt")
-If inst Then pub = sh.ExpandEnvironmentStrings("%ProgramData%") & "\MercadoOnline\pub" Else pub = dir & "\dados"
+If inst Then pub = sh.ExpandEnvironmentStrings("%ProgramData%") & "\AdaptaSysMercado\pub" Else pub = dir & "\dados"
 
 ' fecha as janelas do PDV deste usuario (Chrome/Edge em modo aplicativo com o perfil do PDV)
-ps = "Get-CimInstance Win32_Process | Where-Object { ($_.Name -eq 'chrome.exe' -or $_.Name -eq 'msedge.exe') -and ($_.CommandLine -like '*MercadoOnline*navegador*' -or $_.CommandLine -like '*dados\navegador*') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+ps = "Get-CimInstance Win32_Process | Where-Object { ($_.Name -eq 'chrome.exe' -or $_.Name -eq 'msedge.exe') -and ($_.CommandLine -like '*AdaptaSysMercado*navegador*' -or $_.CommandLine -like '*dados\navegador*') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
 sh.Run "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command """ & ps & """", 0, True
 
 ok = False

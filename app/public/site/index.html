@@ -913,7 +913,7 @@ vCfg=function(){
   <button class="b w" onclick="saveEmp()">Salvar taxas</button></div>
   <div class="card"><h2>🖨️ Impressora e cupom</h2>
   <label style="display:flex;gap:10px;align-items:center;color:var(--tx);margin:4px 0 10px"><input type="checkbox" style="width:auto;margin:0" ${autoPr?'checked':''} onchange="autoPr=this.checked;try{localStorage.setItem('autoPr',this.checked?'1':'0')}catch(e){}"> Imprimir automaticamente ao confirmar o pedido</label>
-  <p class="mu" style="margin:-4px 0 10px">Impressão direta, sem janela: abra o painel pela Gestão do programa Mercado Online no computador da loja.</p>
+  <p class="mu" style="margin:-4px 0 10px">Impressão direta, sem janela: abra o painel pela Gestão do programa AdaptaSys Mercado no computador da loja.</p>
   <label>Papel</label><select onchange="setFmt(this.value)"><option value="a4" ${fmt=='a4'?'selected':''}>A4</option><option value="t80" ${fmt=='t80'?'selected':''}>Bobina 80 mm (Bematech)</option></select>
   <label>Tamanho das letras (neste aparelho)</label><div class="q" style="justify-content:flex-start;margin-bottom:8px"><button onclick="bump(-5)" aria-label="Diminuir letras">A−</button><b class="psv">${Math.round(psc[fmt]*100)}%</b><button onclick="bump(5)" aria-label="Aumentar letras">A+</button></div>
   <label>Tamanho do logotipo: <b id="lwv">${E.lw}</b> mm</label><input type="range" min="20" max="70" value="${E.lw}" oninput="EMP.lw=+this.value;$('#lwv').textContent=this.value;refPrev()">

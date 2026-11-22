@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PDV · Mercado Online</title>
-<link rel="icon" href="favicon-loja-64.png"><meta name="theme-color" content="#FFFFFF">
+<title>PDV · AdaptaSys Mercado</title>
+<link rel="icon" href="adaptasys-64.png"><meta name="theme-color" content="#FFFFFF">
 <style>
 :root{--bg:#eef2f8;--card:#fff;--tx:#14213d;--mu:#5b6b84;--bd:#d8e0ec;--ac:#0b4aa8;--ac2:#e3edfb;--b1:#1a6ae0;--b2:#0b4aa8;--ok:#1a9a5a;--ok2:#e2f5ea;--rd:#c0392b;--rd2:#fbe7e4;--wn:#b45309;--wn2:#fdf0dc;--sel:#fff3c4}
 *{box-sizing:border-box}
@@ -533,7 +533,7 @@ async function opM(){
   const sp=semPin(),ult=localStorage.getItem('pdvult');
   if(sp){const a=d.ops.find(o=>o.id==ult)||(d.ops.length==1?d.ops[0]:null);if(a&&!window._trocando&&await opEntrar(a.id,''))return}
   window._trocando=false;
-  openM(`<h3>👤 Quem está no caixa?</h3>${sp?'<p class="mu" style="font-size:16px">Toque no seu nome.</p>':''}<div class="opg">${d.ops.map(o=>`<button class="b s" onclick="${sp?`opEntrar('${o.id}','')`:`opPin('${o.id}','${esc(o.n).replace(/'/g,'')}')`}">${esc(o.n)}<small>${o.nivel=='gerente'?'Gerente':'Caixa'}</small></button>`).join('')}</div>`,{lock:true,sticky:true,cls:'wide'});
+  openM(`<h3>👤 Quem está no caixa?</h3>${sp?'<p class="mu" style="font-size:16px">Toque no seu nome.</p>':''}<div class="opg">${d.ops.map(o=>`<button class="b s" onclick="${sp?`opEntrar('${o.id}','')`:`opPin('${o.id}','${esc(o.n).replace(/'/g,'')}')`}">${esc(o.n)}<small>${o.nivel=='gerente'?'Gerente':'Caixa'}</small></button>`).join('')}</div><div class="mkas" style="text-align:center;margin-top:16px"><img src="adaptasys-logo.png" alt="AdaptaSys - Sistemas Inteligentes" style="height:46px;width:auto;max-width:70%;background:#fff;padding:5px 9px;border-radius:10px"></div>`,{lock:true,sticky:true,cls:'wide'});
 }
 function opPin(id,n){
   openM(`<h3>👤 ${esc(n)}</h3><label>Digite seu PIN</label><input id="opp" type="password" inputmode="numeric" class="pgv" autofocus>
@@ -1458,6 +1458,7 @@ function cupomSpec(o){
   if(o.fat&&o.fat.op)S.push({t:'Operador: '+o.fat.op,a:'c'});
   S.push({t:'NÃO É DOCUMENTO FISCAL',a:'c',b:1});
   String(EMP.msg||'').split('\n').forEach(l=>l.trim()&&S.push({t:l,a:'c'}));
+  S.push({t:'Sistema AdaptaSys Mercado',a:'c'});
   return S;
 }
 function specHtml(S,logo){

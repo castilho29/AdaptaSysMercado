@@ -1,6 +1,6 @@
 'use strict';
 /* =====================================================================
-   MERCADO ONLINE · servidor local do PDV (um por empresa)
+   ADAPTASYS MERCADO · servidor local do PDV (um por empresa)
    - Banco local SQLite (pasta "dados"): o caixa vende sem internet.
    - Sincroniza com o Supabase quando há internet:
        envia vendas/movimentos da fila e puxa produtos, pedidos e ajustes.
@@ -312,7 +312,7 @@ function pend() {
 function status() {
   const ob = db.prepare('select count(*) n from outbox where err is null').get().n;
   const errs = db.prepare('select seq,kind,ref,payload,err from outbox where err is not null order by seq').all().map(r => { const p = J(r.payload) || {}; return { seq: r.seq, kind: r.kind, ref: r.ref, err: r.err, total: p.data ? (p.data.total ?? p.data.valor ?? null) : (p.valor ?? null), desc: p.mov ? p.mov.tipo + ' ' + p.mov.n : p.tab ? p.tab : p.data && p.data.n ? p.data.n : '' } });
-  return { local: true, produto: 'Mercado Online', versao: VERSAO, needSetup: !sbOk(), user: S && S.user, needLogin, online, lastSync, lastErr, outbox: ob, errs, products: db.prepare('select count(*) n from products').get().n, prn: prnCfg(), regras: regras(), ops: opsAtivos().length, fiscal: FISCAL.estado(), integridade: INTEG.ok === false ? INTEG : undefined, version: 4 };
+  return { local: true, produto: 'AdaptaSys Mercado', versao: VERSAO, needSetup: !sbOk(), user: S && S.user, needLogin, online, lastSync, lastErr, outbox: ob, errs, products: db.prepare('select count(*) n from products').get().n, prn: prnCfg(), regras: regras(), ops: opsAtivos().length, fiscal: FISCAL.estado(), integridade: INTEG.ok === false ? INTEG : undefined, version: 4 };
 }
 
 /* versão instalada (vem do manifest.json do pacote): as telas abertas comparam e se recarregam sozinhas depois de uma atualização */
@@ -809,7 +809,7 @@ function bkCopiarXml(de, para) {   // cópia incremental dos XMLs (guardar 5 ano
 function bkCopiar(f) {
   const c = bkCfg(); if (!c.pasta) return null;
   try {
-    const alvo = path.join(c.pasta, 'MercadoOnline-backup'); fs.mkdirSync(alvo, { recursive: true });
+    const alvo = path.join(c.pasta, 'AdaptaSysMercado-backup'); fs.mkdirSync(alvo, { recursive: true });
     const nome = f || bkLista(BKDIR, 'pc').filter(x => x.f.startsWith('pdv-')).sort((a, b) => a.data.localeCompare(b.data)).pop()?.f;
     if (nome) fs.copyFileSync(path.join(BKDIR, nome), path.join(alvo, nome));
     const nx = bkCopiarXml(path.join(DATA, 'xml'), path.join(alvo, 'xml'));
@@ -831,7 +831,7 @@ function backup(manual) {
 }
 setTimeout(backup, 5000); setInterval(backup, 3 * 3600e3);
 function bkEstado() {
-  const c = bkCfg(), loc = bkLista(BKDIR, 'pc'), fora = c.pasta ? bkLista(path.join(c.pasta, 'MercadoOnline-backup'), 'pasta') : [];
+  const c = bkCfg(), loc = bkLista(BKDIR, 'pc'), fora = c.pasta ? bkLista(path.join(c.pasta, 'AdaptaSysMercado-backup'), 'pasta') : [];
   let pastaOk = null; if (c.pasta) try { fs.accessSync(c.pasta, fs.constants.W_OK); pastaOk = true } catch (e) { pastaOk = false }
   return { dir: BKDIR, pasta: c.pasta || '', pastaOk, ultCopia: c.ultCopia || '', erroCopia: c.erroCopia || '', itens: [...loc, ...fora].sort((a, b) => b.data.localeCompare(a.data)) };
 }
@@ -846,7 +846,7 @@ function bkConfig(b) {
 }
 function bkArquivo(f, origem) {
   if (!/^(pdv-|antes-de-restaurar-)[\w-]+\.db$/.test(String(f || ''))) throw new Error('Arquivo de backup inválido.');
-  const dir = origem == 'pasta' ? path.join(bkCfg().pasta || '', 'MercadoOnline-backup') : BKDIR, a = path.join(dir, f);
+  const dir = origem == 'pasta' ? path.join(bkCfg().pasta || '', 'AdaptaSysMercado-backup') : BKDIR, a = path.join(dir, f);
   if (!fs.existsSync(a)) throw new Error('Backup não encontrado: ' + f); return a;
 }
 function bkRestaurar(b) {
@@ -1305,7 +1305,7 @@ const server = http.createServer(async (req, res) => {
       try {
         gerente({ token: u.searchParams.get('t') || '' }, 'baixar o backup');
         const a = bkArquivo(u.searchParams.get('f'), u.searchParams.get('o')), st = fs.statSync(a);
-        res.writeHead(200, { 'content-type': 'application/octet-stream', 'content-length': st.size, 'content-disposition': `attachment; filename="MercadoOnline-${path.basename(a)}"` });
+        res.writeHead(200, { 'content-type': 'application/octet-stream', 'content-length': st.size, 'content-disposition': `attachment; filename="AdaptaSysMercado-${path.basename(a)}"` });
         return fs.createReadStream(a).pipe(res);
       } catch (e) { return send(res, 400, { error: e.message }) }
     }
@@ -1325,7 +1325,7 @@ const server = http.createServer(async (req, res) => {
     }
     let p = decodeURIComponent(u.pathname); if (p == '/') { res.writeHead(302, { location: '/pdv.html' }); return res.end() }
     if (!sbOk() && /^\/(pdv|gestao)\.html$/.test(p)) { res.writeHead(302, { location: '/configurar.html' }); return res.end() }   // primeira configuração
-    if (p == '/config.js') { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' }); return res.end('window.MO_CFG=' + JSON.stringify({ sbUrl: CFG.sbUrl || '', sbKey: CFG.sbKey || '', fakeDom: CFG.fakeDom || '', produto: 'Mercado Online' }) + ';') }
+    if (p == '/config.js') { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' }); return res.end('window.MO_CFG=' + JSON.stringify({ sbUrl: CFG.sbUrl || '', sbKey: CFG.sbKey || '', fakeDom: CFG.fakeDom || '', produto: 'AdaptaSys Mercado' }) + ';') }
     const f = path.normalize(path.join(PUB, p));
     if (!f.startsWith(PUB) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end('Não encontrado') }
     res.writeHead(200, { 'content-type': TYPES[path.extname(f).toLowerCase()] || 'application/octet-stream', 'cache-control': 'no-cache' });

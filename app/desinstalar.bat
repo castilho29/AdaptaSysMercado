@@ -1,6 +1,6 @@
 @echo off
 cd /d "%~dp0"
-title Desinstalar Mercado Online
+title Desinstalar AdaptaSys Mercado
 net session >nul 2>&1
 if errorlevel 1 (
   powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"

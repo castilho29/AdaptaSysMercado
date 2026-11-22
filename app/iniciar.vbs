@@ -1,6 +1,6 @@
 ' Liga o servidor do PDV SEM JANELA e religa sozinho se ele parar.
 ' Instalado (instalado.txt existe): roda pela tarefa do Windows na conta SYSTEM,
-' com os dados na pasta protegida C:\ProgramData\MercadoOnline\dados.
+' com os dados na pasta protegida C:\ProgramData\AdaptaSysMercado\dados.
 ' Sem instalar (pasta solta): usa a pasta "dados" ao lado deste arquivo.
 Set fso = CreateObject("Scripting.FileSystemObject")
 Set sh = CreateObject("WScript.Shell")
@@ -8,7 +8,7 @@ dir = fso.GetParentFolderName(WScript.ScriptFullName)
 sh.CurrentDirectory = dir
 inst = fso.FileExists(dir & "\instalado.txt")
 If inst Then
-  base = sh.ExpandEnvironmentStrings("%ProgramData%") & "\MercadoOnline"
+  base = sh.ExpandEnvironmentStrings("%ProgramData%") & "\AdaptaSysMercado"
   dados = base & "\dados": pub = base & "\pub"
   Set env = sh.Environment("PROCESS")
   env("PDV_DATA") = dados

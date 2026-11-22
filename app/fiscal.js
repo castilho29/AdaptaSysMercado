@@ -1,5 +1,5 @@
 'use strict';
-/* NFC-e (modelo 65) e NF-e (55) direto na SEFAZ — Mercado Online
+/* NFC-e (modelo 65) e NF-e (55) direto na SEFAZ — AdaptaSys Mercado
    Monta o XML 4.00, assina com o certificado A1, gera o QR Code (versão 2, com CSC),
    envia para a autorizadora da UF (tabela das 27 UFs em sefaz.json), entra em contingência offline quando
    não há comunicação e reenvia sozinho depois. Referência: leiaute NF-e 4.00 (MOC),
@@ -180,7 +180,7 @@ create index if not exists nfce_venda on nfce(venda);`);
     const ender = `<enderEmit><xLgr>${txt(c.xLgr, 60)}</xLgr><nro>${txt(c.nro, 60)}</nro><xBairro>${txt(c.xBairro, 60)}</xBairro><cMun>${c.cMun}</cMun><xMun>${txt(c.xMun, 60)}</xMun><UF>${c.uf}</UF><CEP>${c.cep}</CEP><cPais>1058</cPais><xPais>BRASIL</xPais>${el('fone', c.fone.length >= 6 ? c.fone : '')}</enderEmit>`;
     const respTec = c.rtCnpj && c.rtContato && c.rtEmail && c.rtFone ? `<infRespTec><CNPJ>${c.rtCnpj}</CNPJ><xContato>${txt(c.rtContato, 60)}</xContato><email>${txt(c.rtEmail, 60)}</email><fone>${c.rtFone}</fone></infRespTec>` : '';
     const cont = tpEmis == 9 ? `<dhCont>${dh(o.dhCont || d)}</dhCont><xJust>${txt(o.xJust || 'Sem comunicacao com a SEFAZ no momento da venda', 256)}</xJust>` : '';
-    const inf = `<infNFe Id="NFe${chave}" versao="4.00"><ide><cUF>${U.cUF}</cUF><cNF>${cNF}</cNF><natOp>VENDA</natOp><mod>65</mod><serie>${c.serie}</serie><nNF>${o.num}</nNF><dhEmi>${dh(d)}</dhEmi><tpNF>1</tpNF><idDest>1</idDest><cMunFG>${c.cMun}</cMunFG><tpImp>4</tpImp><tpEmis>${tpEmis}</tpEmis><cDV>${chave.slice(-1)}</cDV><tpAmb>${tpAmb}</tpAmb><finNFe>1</finNFe><indFinal>1</indFinal><indPres>1</indPres><procEmi>0</procEmi><verProc>Mercado Online 1.0</verProc>${cont}</ide>`
+    const inf = `<infNFe Id="NFe${chave}" versao="4.00"><ide><cUF>${U.cUF}</cUF><cNF>${cNF}</cNF><natOp>VENDA</natOp><mod>65</mod><serie>${c.serie}</serie><nNF>${o.num}</nNF><dhEmi>${dh(d)}</dhEmi><tpNF>1</tpNF><idDest>1</idDest><cMunFG>${c.cMun}</cMunFG><tpImp>4</tpImp><tpEmis>${tpEmis}</tpEmis><cDV>${chave.slice(-1)}</cDV><tpAmb>${tpAmb}</tpAmb><finNFe>1</finNFe><indFinal>1</indFinal><indPres>1</indPres><procEmi>0</procEmi><verProc>AdaptaSys Mercado 1.0</verProc>${cont}</ide>`
       + `<emit><CNPJ>${c.cnpj}</CNPJ><xNome>${txt(c.xNome, 60)}</xNome>${el('xFant', txt(c.xFant, 60))}${ender}<IE>${c.ie}</IE><CRT>${c.crt}</CRT></emit>${dest}${det}`
       + `<total><ICMSTot><vBC>0.00</vBC><vICMS>0.00</vICMS><vICMSDeson>0.00</vICMSDeson><vFCP>0.00</vFCP><vBCST>0.00</vBCST><vST>0.00</vST><vFCPST>0.00</vFCPST><vFCPSTRet>0.00</vFCPSTRet><vProd>${f2(vProd)}</vProd><vFrete>0.00</vFrete><vSeg>0.00</vSeg><vDesc>${f2(vDesc)}</vDesc><vII>0.00</vII><vIPI>0.00</vIPI><vIPIDevol>0.00</vIPIDevol><vPIS>0.00</vPIS><vCOFINS>0.00</vCOFINS><vOutro>${f2(vOutro)}</vOutro><vNF>${f2(vNF)}</vNF>${trib.tot > 0 ? `<vTotTrib>${f2(trib.tot)}</vTotTrib>` : ''}</ICMSTot></total>`
       + `<transp><modFrete>9</modFrete></transp><pag>${detPag}${troco > 0 ? `<vTroco>${f2(troco)}</vTroco>` : ''}</pag>${cpl ? `<infAdic><infCpl>${txt(cpl, 2000)}</infCpl></infAdic>` : ''}${respTec}</infNFe>`;
@@ -416,6 +416,7 @@ create index if not exists nfce_venda on nfce(venda);`);
     S.push({ qr: d.qr });
     if (d.op) S.push({ t: 'Operador: ' + d.op, a: 'c' });
     S.push(...parteParceiros(d.venda));
+    S.push({ t: 'Sistema AdaptaSys Mercado', a: 'c' });
     String(emp.msg || '').split('\n').forEach(l => l.trim() && S.push({ t: l, a: 'c' }));
     return S;
   }
@@ -685,12 +686,12 @@ create index if not exists nfce_venda on nfce(venda);`);
     if (!forcar && Date.now() - ult < (!m ? 0.5 : vencendo ? 3 : 24) * 3600e3) return { pulado: true };
     ibptBusy = true; kvSet('ibptCheck', Date.now());
     try {
-      const h = { 'User-Agent': 'Mercado-Online-PDV', Accept: 'application/vnd.github+json' };
+      const h = { 'User-Agent': 'AdaptaSys-Mercado-PDV', Accept: 'application/vnd.github+json' };
       const r = await fetch(IBPT_REPO, { headers: h, signal: AbortSignal.timeout(20000) }); if (!r.ok) throw new Error('GitHub respondeu ' + r.status);
       const l = (await r.json()).map(x => ({ v: (x.name.match(/TabelaIBPTax_(\d+\.\d+\.[A-Z])\.zip$/) || [])[1], url: x.download_url })).filter(x => x.v).sort((a, b) => verN(b.v) - verN(a.v));
       const novo = l[0]; if (!novo) throw new Error('Nenhuma tabela encontrada.');
       if (m && verN(m.versao) >= verN(novo.v)) return { atual: true, versao: m.versao, msg: 'A tabela ' + m.versao + ' já é a mais nova.' + (dBr(m.fim) < hoje ? ' (O IBPT ainda não publicou a próxima.)' : '') };
-      const z = await fetch(novo.url, { headers: { 'User-Agent': 'Mercado-Online-PDV' }, signal: AbortSignal.timeout(120000) }); if (!z.ok) throw new Error('Download respondeu ' + z.status);
+      const z = await fetch(novo.url, { headers: { 'User-Agent': 'AdaptaSys-Mercado-PDV' }, signal: AbortSignal.timeout(120000) }); if (!z.ok) throw new Error('Download respondeu ' + z.status);
       const buf = Buffer.from(await z.arrayBuffer()), uf = cfg().uf || '';
       const f = unzipAcha(buf, n => new RegExp(`TabelaIBPTax${uf}[^/]*\\.csv$`, 'i').test(n)); if (!f) throw new Error('Tabela do ' + uf + ' não encontrada no arquivo.');
       const t = ibptCsv(f.data.toString('latin1'), uf);
@@ -721,7 +722,7 @@ create index if not exists nfce_venda on nfce(venda);`);
     return new Promise((ok, no) => {
       const u = new URL(url); let st = 0, txt = '', fim = false; const done = (e) => { if (fim) return; fim = true; clearTimeout(t); if (st) ok({ status: st, text: txt }); else no(e || new Error('sem resposta')) };
       const rq = (u.protocol == 'http:' ? require('http') : https).request({ hostname: u.hostname, port: u.port || undefined, path: u.pathname + u.search, method: 'GET', ALPNProtocols: ['http/1.1'],
-        headers: { Accept: 'application/json, text/plain, */*', 'Accept-Language': 'pt-BR,pt;q=0.9', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) MercadoOnline', Connection: 'close' } }, res => {
+        headers: { Accept: 'application/json, text/plain, */*', 'Accept-Language': 'pt-BR,pt;q=0.9', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AdaptaSysMercado', Connection: 'close' } }, res => {
         st = res.statusCode; res.setEncoding('utf8'); res.on('data', d => { txt += d; if (txt.length > 200000) rq.destroy() }); res.on('end', () => done()); res.on('error', e => done(e)); res.on('aborted', () => done());
       });
       const t = setTimeout(() => { rq.destroy(new Error('tempo esgotado')) }, ms || 10000);
@@ -863,7 +864,7 @@ create index if not exists nfce_venda on nfce(venda);`);
     const cpl = [dev ? `Devolucao referente a NF-e ${String(doc.refNum || '')} chave ${dg(doc.ref)}.` : '', 'DOCUMENTO EMITIDO POR ME OU EPP OPTANTE PELO SIMPLES NACIONAL. NAO GERA DIREITO A CREDITO FISCAL DE IPI.', doc.obs || '',
       trib.tot > 0 ? `Trib aprox R$ ${f2(trib.fed).replace('.', ',')} Federal, R$ ${f2(trib.est).replace('.', ',')} Estadual e R$ ${f2(trib.mun).replace('.', ',')} Municipal. Fonte: ${(!trib.usouTab && trib.api55 ? trib.api55.fonte : im && im.fonte) || 'IBPT'} ${(!trib.usouTab && trib.api55 ? trib.api55.chave : im && im.chave) || ''}` : ''].filter(Boolean).join(' ');
     const natOp = txt(doc.natOp || (dev ? 'DEVOLUCAO DE COMPRA PARA COMERCIALIZACAO' : 'VENDA DE MERCADORIA'), 60);
-    const inf = `<infNFe Id="NFe${chave}" versao="4.00"><ide><cUF>${U.cUF}</cUF><cNF>${cNF}</cNF><natOp>${natOp}</natOp><mod>55</mod><serie>${c.serie55}</serie><nNF>${o.num}</nNF><dhEmi>${dh(d)}</dhEmi><dhSaiEnt>${dh(d)}</dhSaiEnt><tpNF>1</tpNF><idDest>${idDest}</idDest><cMunFG>${c.cMun}</cMunFG><tpImp>1</tpImp><tpEmis>1</tpEmis><cDV>${chave.slice(-1)}</cDV><tpAmb>${tpAmb}</tpAmb><finNFe>${dev ? 4 : 1}</finNFe><indFinal>${indFinal}</indFinal><indPres>${dev ? 0 : 1}</indPres><procEmi>0</procEmi><verProc>Mercado Online 1.0</verProc>${dev ? `<NFref><refNFe>${dg(doc.ref)}</refNFe></NFref>` : ''}</ide>`
+    const inf = `<infNFe Id="NFe${chave}" versao="4.00"><ide><cUF>${U.cUF}</cUF><cNF>${cNF}</cNF><natOp>${natOp}</natOp><mod>55</mod><serie>${c.serie55}</serie><nNF>${o.num}</nNF><dhEmi>${dh(d)}</dhEmi><dhSaiEnt>${dh(d)}</dhSaiEnt><tpNF>1</tpNF><idDest>${idDest}</idDest><cMunFG>${c.cMun}</cMunFG><tpImp>1</tpImp><tpEmis>1</tpEmis><cDV>${chave.slice(-1)}</cDV><tpAmb>${tpAmb}</tpAmb><finNFe>${dev ? 4 : 1}</finNFe><indFinal>${indFinal}</indFinal><indPres>${dev ? 0 : 1}</indPres><procEmi>0</procEmi><verProc>AdaptaSys Mercado 1.0</verProc>${dev ? `<NFref><refNFe>${dg(doc.ref)}</refNFe></NFref>` : ''}</ide>`
       + `<emit><CNPJ>${c.cnpj}</CNPJ><xNome>${txt(c.xNome, 60)}</xNome>${el('xFant', txt(c.xFant, 60))}${ender}<IE>${c.ie}</IE><CRT>${c.crt}</CRT></emit>${dest}${det}`
       + `<total><ICMSTot><vBC>0.00</vBC><vICMS>0.00</vICMS><vICMSDeson>0.00</vICMSDeson><vFCP>0.00</vFCP><vBCST>0.00</vBCST><vST>0.00</vST><vFCPST>0.00</vFCPST><vFCPSTRet>0.00</vFCPSTRet><vProd>${f2(vProd)}</vProd><vFrete>${f2(vFrete)}</vFrete><vSeg>0.00</vSeg><vDesc>${f2(vDesc)}</vDesc><vII>0.00</vII><vIPI>0.00</vIPI><vIPIDevol>0.00</vIPIDevol><vPIS>0.00</vPIS><vCOFINS>0.00</vCOFINS><vOutro>0.00</vOutro><vNF>${f2(vNF)}</vNF>${trib.tot > 0 ? `<vTotTrib>${f2(trib.tot)}</vTotTrib>` : ''}</ICMSTot></total>`
       + `<transp><modFrete>${mf}</modFrete></transp><pag>${detPag}</pag><infAdic><infCpl>${txt(cpl, 4000)}</infCpl></infAdic>${respTec}</infNFe>`;

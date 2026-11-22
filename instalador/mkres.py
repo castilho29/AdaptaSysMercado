@@ -6,7 +6,7 @@ for i in range(n):
     w,h,c,r,pl,bpp,sz,off=struct.unpack('<BBBBHHII',ico[6+16*i:22+16*i])
     imgs.append(ico[off:off+sz]); grp+=struct.pack('<BBBBHHIH',w,h,c,r,pl,bpp,sz,i+1)
 man=('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">\n'
- '<assemblyIdentity version="1.0.0.0" processorArchitecture="amd64" name="MercadoOnline.Setup" type="win32"/>\n<description>Instalador Mercado Online</description>\n'
+ '<assemblyIdentity version="1.0.0.0" processorArchitecture="amd64" name="AdaptaSysMercado.Setup" type="win32"/>\n<description>Instalador AdaptaSys Mercado</description>\n'
  '<trustInfo xmlns="urn:schemas-microsoft-com:asm.v3"><security><requestedPrivileges><requestedExecutionLevel level="requireAdministrator" uiAccess="false"/></requestedPrivileges></security></trustInfo>\n'
  '<compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1"><application><supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/><supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/></application></compatibility>\n'
  '<application xmlns="urn:schemas-microsoft-com:asm.v3"><windowsSettings><dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware></windowsSettings></application>\n</assembly>\n').encode()
@@ -19,7 +19,7 @@ def blk(key,val=b'',typ=1,children=b'',vlen=None):
     head=pad4(head); data=pad4(head+val)+children
     return struct.pack('<H',len(data))+data[2:]
 def sblk(k,v): return pad4(blk(k,wstr(v),1,vlen=len(v)+1))
-strs=b''.join(sblk(k,v) for k,v in [('CompanyName','Mercado Online'),('FileDescription','Instalador Mercado Online'),('FileVersion',ver),('ProductName','Mercado Online'),('ProductVersion',ver),('OriginalFilename','MercadoOnline-Setup.exe'),('LegalCopyright','Mercado Online')])
+strs=b''.join(sblk(k,v) for k,v in [('CompanyName','AdaptaSys Mercado'),('FileDescription','Instalador AdaptaSys Mercado'),('FileVersion',ver),('ProductName','AdaptaSys Mercado'),('ProductVersion',ver),('OriginalFilename','AdaptaSysMercado-Setup.exe'),('LegalCopyright','AdaptaSys Mercado')])
 st=blk('041604b0',b'',1,strs,vlen=0); sfi=blk('StringFileInfo',b'',1,pad4(st),vlen=0)
 vfi=blk('VarFileInfo',b'',1,pad4(blk('Translation',struct.pack('<HH',0x0416,1200),0)),vlen=0)
 ffi=struct.pack('<IIIIIIIIIIIII',0xFEEF04BD,0x10000,1,0,1,0,0x3F,0,0x40004,1,0,0,0)

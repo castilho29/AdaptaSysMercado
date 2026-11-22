@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gestão · Mercado Online</title>
-<link rel="icon" href="favicon-loja-64.png"><meta name="theme-color" content="#FFFFFF">
+<title>Gestão · AdaptaSys Mercado</title>
+<link rel="icon" href="adaptasys-64.png"><meta name="theme-color" content="#FFFFFF">
 <style>
 :root{--bg:#eef2f8;--card:#fff;--tx:#14213d;--mu:#5b6b84;--bd:#d8e0ec;--ac:#0b4aa8;--ac2:#e3edfb;--b1:#1a6ae0;--b2:#0b4aa8;--ok:#1a9a5a;--ok2:#e2f5ea;--rd:#c0392b;--rd2:#fbe7e4;--wn:#b45309;--wn2:#fdf0dc;--row:#f7f9fc}
 *{box-sizing:border-box}
@@ -238,7 +238,7 @@ async function login(){
   if(d.primeiro){$('#root').innerHTML='<div class="card login"><h2>Cadastre o gerente no PDV</h2><p class="mu">Abra o PDV: no primeiro acesso ele pede o cadastro do gerente.</p></div>';return}
   const gs=d.ops.filter(o=>o.nivel=='gerente'),sp=!!(ST&&ST.regras&&ST.regras.semPin);
   if(sp&&gs.length==1&&!window._saiu)return doLogin(gs[0].id,'');
-  $('#root').innerHTML=`<div class="card login"><img src="${esc(EMP.logo||'logo.png')}" alt="" style="width:80px;height:80px;object-fit:contain" onerror="this.style.display='none'"><h2>Gestão da loja</h2><p class="mu">${sp?'Toque no seu nome.':'Somente gerente.'}</p><div class="opg">${gs.map(o=>`<button class="b s" onclick="${sp?`doLogin('${o.id}','')`:`pinLogin('${o.id}','${esc(o.n).replace(/'/g,'')}')`}">${esc(o.n)}<small>Gerente</small></button>`).join('')}</div></div>`;
+  $('#root').innerHTML=`<div class="card login"><img src="${esc(EMP.logo||'logo.png')}" alt="" style="width:80px;height:80px;object-fit:contain" onerror="this.style.display='none'"><h2>Gestão da loja</h2><p class="mu">${sp?'Toque no seu nome.':'Somente gerente.'}</p><div class="opg">${gs.map(o=>`<button class="b s" onclick="${sp?`doLogin('${o.id}','')`:`pinLogin('${o.id}','${esc(o.n).replace(/'/g,'')}')`}">${esc(o.n)}<small>Gerente</small></button>`).join('')}</div><div class="mkas" style="text-align:center;margin-top:16px"><img src="adaptasys-logo.png" alt="AdaptaSys - Sistemas Inteligentes" style="height:46px;width:auto;max-width:70%;background:#fff;padding:5px 9px;border-radius:10px"></div></div>`;
 }
 function pinLogin(id,n){
   openM(`<h3>${esc(n)}</h3><label>PIN</label><input id="pp" type="password" inputmode="numeric" autofocus><div class="mb"><button class="b s" onclick="closeM()">Voltar</button><button class="b" onclick="doLogin('${id}')">Entrar</button></div>`,{key:e=>{if(e.key=='Enter')doLogin(id)}});
@@ -314,7 +314,7 @@ function drawBk(){
   <div class="card"><h3 style="margin-top:0">Cópia em outra pasta</h3>
    <label>Pasta (neste computador servidor)</label><div class="bar"><input id="bk-p" value="${esc(b.pasta)}" placeholder="Ex.: E:\\   ou   C:\\Users\\Loja\\Google Drive\\Backup"><button class="b s" onclick="bkPasta()">Salvar pasta</button>${b.pasta?'<button class="b gh" onclick="$(\'#bk-p\').value=\'\';bkPasta()">Desligar</button>':''}</div>
    ${b.erroCopia?`<p class="aviso">⚠️ A última cópia falhou: ${esc(b.erroCopia)}. Se for pendrive, confira se está conectado.</p>`:b.pastaOk===false?'<p class="aviso">⚠️ A pasta não está acessível agora (pendrive desconectado?).</p>':''}
-   <p class="sm mu">Toda vez que sai um backup novo, ele é copiado para <code>${esc(b.pasta||'PASTA')}\\MercadoOnline-backup</code>, junto com os XMLs das notas (que precisam ser guardados por 5 anos). Lá ficam os últimos 15.</p></div>
+   <p class="sm mu">Toda vez que sai um backup novo, ele é copiado para <code>${esc(b.pasta||'PASTA')}\\AdaptaSysMercado-backup</code>, junto com os XMLs das notas (que precisam ser guardados por 5 anos). Lá ficam os últimos 15.</p></div>
   <div class="card"><h3 style="margin-top:0">Backups guardados</h3><div class="tw"><table><thead><tr><th>Arquivo</th><th>Onde</th><th>Data</th><th class="r">Tamanho</th><th></th></tr></thead><tbody>
    ${b.itens.map((x,i)=>`<tr><td><b>${esc(x.f)}</b>${x.f.startsWith('antes-')?'<small>cópia automática feita antes de uma restauração</small>':''}</td><td>${x.origem=='pasta'?'📤 Outra pasta':'💻 Este computador'}</td><td>${new Date(x.data).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</td><td class="r num">${tam(x.tam)}</td>
     <td class="r" style="white-space:nowrap"><button class="b s sm" onclick="bkBaixar(${i})">⬇️ Baixar</button> <button class="b gh sm" style="color:var(--rd)" onclick="bkRestM(${i})">Restaurar</button></td></tr>`).join('')||'<tr><td colspan="5" class="mu">Nenhum backup ainda.</td></tr>'}
@@ -412,7 +412,7 @@ function go(t){
   if(t.startsWith('cfg-')){cfgSub=t.slice(4);t='cfg'}
   if(t=='nf55'){fisSub='nf55';t='fis'}else if(t=='nfce'){fisSub='nfce';t='fis'}
   if(!TODAS.includes(t))t='ini';tab=t;
-  $('#tabs').innerHTML=GRUPOS.map(([g,l])=>(g?`<div class="tg">${g}</div>`:'')+l.map(([k,i,n])=>`<button class="${k==tab?'on':''}" onclick="go('${k}')">${i} ${n}<span class="bd" id="bd-${k}" hidden></span></button>`).join('')).join('')+`<div class="tg" style="font-weight:600;text-transform:none;letter-spacing:0;margin-top:14px">Versão ${esc((ST&&ST.versao)||'?')}</div>`;
+  $('#tabs').innerHTML=GRUPOS.map(([g,l])=>(g?`<div class="tg">${g}</div>`:'')+l.map(([k,i,n])=>`<button class="${k==tab?'on':''}" onclick="go('${k}')">${i} ${n}<span class="bd" id="bd-${k}" hidden></span></button>`).join('')).join('')+`<div class="tg" style="font-weight:600;text-transform:none;letter-spacing:0;margin-top:14px;line-height:1.5"><img src="adaptasys-logo.png" alt="AdaptaSys - Sistemas Inteligentes" style="display:block;width:150px;max-width:100%;height:auto;margin:0 0 6px -4px;background:#fff;padding:4px 7px;border-radius:9px;box-sizing:border-box">AdaptaSys Mercado · versão ${esc((ST&&ST.versao)||'?')}</div>`;
   history.replaceState(null,'','#'+(t=='cfg'?'cfg-'+cfgSub:t=='fis'?fisSub:t));
   if(t=='cfg')vCfg();else ({ini:vIni,ped:vPed,prod:vProd,dep:vDep,nfe:vNfe,pagar:vPagar,val:vVal,inv:vInv,baixo:vBaixo,mov:vMov,cli:vCli,fiado:vFiado,fis:vNotas,rep:vRep})[t]();badges()
 }
@@ -1104,7 +1104,7 @@ async function vAj(sec){
   <div class="card" id="horc" data-s="entrega"><h2>🕒 Horário de pedidos pelo app</h2><p class="mu">Fora do horário o cliente vê "Fechado agora · abre amanhã às 7:00", pode montar o carrinho, mas não consegue enviar. O banco online também confere, então ninguém pede fora do horário.</p>
   <label class="ck" style="font-size:16px"><input type="checkbox" id="h-on" ${(E.hor||{}).on?'checked':''} onchange="horPrev()"> <b>Usar horário de atendimento</b></label>
   <div id="horcorpo"></div></div>
-  <div class="card" data-s="app"><h2>Endereço do site do catálogo</h2><p class="mu">O link que o cliente usa para abrir o app (ex.: https://seu-usuario.github.io/MercadoOnline/). Serve para gerar o link e o QR Code do entregador e para o cliente voltar ao app depois de pagar na InfinitePay.</p>
+  <div class="card" data-s="app"><h2>Endereço do site do catálogo</h2><p class="mu">O link que o cliente usa para abrir o app (ex.: https://seu-usuario.github.io/AdaptaSysMercado/). Serve para gerar o link e o QR Code do entregador e para o cliente voltar ao app depois de pagar na InfinitePay.</p>
   ${E.site?'':'<p class="aviso">⚠️ Ainda não preenchido: sem ele o QR Code do entregador e a volta do pagamento InfinitePay não funcionam.</p>'}
   <input id="e-site" value="${esc(E.site||'')}" placeholder="https://..." inputmode="url"></div>
   <div class="card" data-s="app"><h2>Banco online e site do catálogo</h2><p class="mu">Cada empresa tem o próprio banco online (Supabase). O site do catálogo do app é gerado aqui, já ligado a ele, com o nome e o logotipo da loja.</p>
@@ -1185,7 +1185,7 @@ async function baixarSite(){
       ['parceiro/manifest.webmanifest',enc.encode(JSON.stringify({id:'./?app=parceiro',name:'Parceiro - '+nome,short_name:'Parceiro',description:'Pedidos de '+nome+' para parceiros',start_url:'./?pwa=1',scope:'./',display:'standalone',orientation:'portrait',background_color:'#ffffff',theme_color:'#0B8F5A',lang:'pt-BR',
         icons:[{src:'icon-192.png',sizes:'192x192',type:'image/png',purpose:'any'},{src:'icon-512.png',sizes:'512x512',type:'image/png',purpose:'any'},{src:'icon-maskable-512.png',sizes:'512x512',type:'image/png',purpose:'maskable'}]}))],
       ['parceiro/icon-192.png',await iconeSvg(svgParc(0.04),192)],['parceiro/icon-512.png',await iconeSvg(svgParc(0.04),512)],['parceiro/icon-maskable-512.png',await iconeSvg(svgParc(0.16),512)],['parceiro/favicon-64.png',await iconeSvg(svgParc(0),64)],['parceiro/apple-touch-icon.png',await iconeSvg(svgParc(0.06),180)],
-      ['config.js',enc.encode('/* '+nome+' · gerado pela Gestão do Mercado Online em '+new Date().toLocaleString('pt-BR')+' */\n'+cfg+'\n')],
+      ['config.js',enc.encode('/* '+nome+' · gerado pela Gestão do AdaptaSys Mercado em '+new Date().toLocaleString('pt-BR')+' */\n'+cfg+'\n')],
       ['manifest.webmanifest',man(nome.slice(0,12),'index.html','Catálogo e pedidos de '+nome)],['manifest-loja.webmanifest',man('Loja','admin.html','Painel de '+nome)],
       ['logo.png',await iconePng(logo,512,0.04)],['icon-192.png',await iconePng(logo,192,0.06)],['icon-512.png',await iconePng(logo,512,0.06)],['icon-maskable-512.png',await iconePng(logo,512,0.16)],
       ['favicon-64.png',await iconePng(logo,64,0.04)],['apple-touch-icon.png',await iconePng(logo,180,0.08)],
@@ -1255,7 +1255,7 @@ function drawMp(){
   ${e.ok?`<p><span class="chip on"><i></i>Conectado</span> <b>${esc(c.nome||'Conta Mercado Pago')}</b>${c.email?' · '+esc(c.email):''} <span class="mu">· token …${esc(e.fim)}</span>${c.teste?' <span class="tag" style="background:var(--wn);color:#fff">CONTA DE TESTE</span>':''}</p>`:'<p class="mu">Ainda não conectado. Cole o Access Token da conta Mercado Pago da loja.</p>'}
   <label>Access Token ${e.ok?'(só preencha para trocar de conta)':''}</label><input id="mp-tk" type="password" autocomplete="off" placeholder="APP_USR-…" style="max-width:560px">
   <details style="margin-top:8px"><summary class="mu" style="cursor:pointer;font-weight:600">Onde pegar o Access Token</summary><ol class="sm" style="margin:8px 0;padding-left:20px">
-   <li>Entre em <b>mercadopago.com.br/developers/panel/app</b> com a conta da loja e clique em <b>Criar aplicação</b> (nome: Mercado Online; solução: <b>Pagamentos presenciais / online</b>).</li>
+   <li>Entre em <b>mercadopago.com.br/developers/panel/app</b> com a conta da loja e clique em <b>Criar aplicação</b> (nome: AdaptaSys Mercado; solução: <b>Pagamentos presenciais / online</b>).</li>
    <li>Abra a aplicação › <b>Credenciais de produção</b> e copie o <b>Access Token</b> (começa com <code>APP_USR-</code>).</li>
    <li>O token fica guardado só neste computador. Nunca vai para o app do cliente nem para o Supabase. Não envie para ninguém.</li></ol></details>
   </div>

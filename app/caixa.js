@@ -1,6 +1,6 @@
 'use strict';
 /* =====================================================================
-   CAIXA DA REDE (terminal) · Mercado Online
+   CAIXA DA REDE (terminal) · AdaptaSys Mercado
    Roda nos outros computadores da loja. Mostra as telas do PDV, imprime na
    impressora DESTE computador e repassa todo o resto para o servidor da loja
    (o computador principal), que guarda o banco, emite as notas e sincroniza.
