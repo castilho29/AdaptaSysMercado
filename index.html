@@ -460,6 +460,12 @@ vCart=function(){
 };
 /* ===== MEUS PEDIDOS (cliente): resumo, andamento e histórico ===== */
 const PASSOS=[['novo','Recebido'],['conf','Aceito'],['ent','Entregue']];
+/* pedido com produtos de parceiros: o cliente vê a situação de cada parte */
+function partesCli(o){
+  const ps=Object.entries(o.parts||{});if(!ps.length||stOf(o)=='canc')return '';
+  const T={novo:'aguardando',aceito:'separando',pronto:'pronto, o entregador vai buscar',saiu:'saiu para entrega',entregue:'entregue',falta:'avisou falta de produto (a loja vai falar com você)'};
+  return '<div class="mu" style="font-size:13.5px;margin:6px 0 0">'+ps.map(([k,p])=>{const n=(o.items||[]).filter(i=>i.parc==k).length;return `🤝 <b>${esc(p.nome)}</b> (${n} ite${n==1?'m':'ns'}): ${esc(T[p.st||'novo']||p.st)}${p.col?' · já coletado':''}`}).join('<br>')+'</div>';
+}
 function andamento(o){
   const k=stOf(o);if(k=='pagar')return mpPainel(o);if(k=='canc')return '<div class="and canc">✕ Pedido cancelado pela loja'+((o.canc&&(o.canc.motivo||o.canc.mot))||o.motivo?' · '+esc((o.canc&&(o.canc.motivo||o.canc.mot))||o.motivo):'')+'</div>';
   const n=PASSOS.findIndex(p=>p[0]==k);
@@ -475,7 +481,7 @@ function resumoMeus(l){
 function mineHtml(l){
   if(!l.length)return '<div class="card"><p class="mu">Você ainda não fez pedidos.</p></div>';
   const card=o=>`<div class="card"><div class="row"><div><b>${R(o.total)}</b><div class="mu" style="font-size:13px">Pedido #${esc(String(o.id).slice(-4).toUpperCase())} · ${new Date(o.date).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</div></div>${stTag(o)}</div>
-  ${andamento(o)}
+  ${andamento(o)}${partesCli(o)}
   <details><summary class="mu" style="cursor:pointer">${o.items.length} ite${o.items.length==1?'m':'ns'} · ${o.mp&&o.mp.st=='pago'?'<span class="mppg">✓ Pago no app ('+esc(o.mp.tipo||'Pix')+')</span>':o.mp&&o.mp.st=='estornado'?'Pagamento devolvido':esc(o.pay=='Online'?'Pagar pelo app':o.pay)}${o.ent=='retirada'?' · retirada na loja':(o.taxa?' · entrega '+R(o.taxa):' · entrega')}</summary>
   <p>${o.items.map(i=>`${i.q}× ${esc(i.n)} <span class="mu">${R((+i.p||0)*(+i.q||0))}</span>`).join('<br>')}${o.taxa?`<br><span class="mu">Taxa de entrega ${R(o.taxa)}</span>`:''}${o.troco?`<br><span class="mu">Troco para ${R(o.cash)}</span>`:''}</p></details>
   ${o.pay=='Pix'&&EMP.pix&&(stOf(o)=='novo'||stOf(o)=='conf')?`<button class="b ok w" style="margin:8px 0" onclick="showPix('${o.id}')">💠 Pagar com Pix</button>`:''}<button class="b s w" style="margin-top:8px" onclick="repetir('${o.id}')">🔁 Repetir este pedido</button></div>`;
@@ -500,7 +506,7 @@ listHtml=function(){
   const t=q.toLowerCase(),l=S.products.filter(p=>(!dep||depOf(p)==dep)&&(!cat||(p.c||'SEM CATEGORIA').toUpperCase()==cat)&&(p.n+' '+(p.marca||'')+' '+(p.cod||'')+' '+(p.bar||'')).toLowerCase().includes(t));
   l.sort((a,b)=>(soldOut(a)-soldOut(b))||(ord=='az'?a.n.localeCompare(b.n,'pt-BR'):ord=='za'?b.n.localeCompare(a.n,'pt-BR'):ord=='lo'?a.p-b.p:b.p-a.p));
   if(!l.length)return '<p class="mu">Nenhum produto encontrado.</p>';
-  return '<div class="pg">'+l.slice(0,lim).map(p=>`<div class="pcard${soldOut(p)?' off':''}"><div class="pimg">${soldOut(p)?'<span class="sold">Indisponível</span>':''}${p.img?`<img alt="" src="${p.img}">`:'🛒'}</div><div class="pname">${esc(p.n)}</div>${p.marca?`<div class="mu" style="font-size:12.5px;font-weight:600">${esc(p.marca)}</div>`:''}${p.cod?`<div class="mu" style="font-size:12px">(Código ${esc(p.cod)})</div>`:''}<div class="pprice">${R(p.p)}<span class="mu" style="font:13px sans-serif"> / ${esc(p.u)}</span></div>${lowTag(p)}${qtyBtn(p)}</div>`).join('')+'</div>'+(l.length>lim?`<button class="b s w" onclick="lim+=60;$('#pl').innerHTML=listHtml()">Mostrar mais (${l.length-lim})</button>`:'');
+  return '<div class="pg">'+l.slice(0,lim).map(p=>`<div class="pcard${soldOut(p)?' off':''}"><div class="pimg">${soldOut(p)?'<span class="sold">Indisponível</span>':''}${p.img?`<img alt="" src="${p.img}">`:'🛒'}</div><div class="pname">${esc(p.n)}</div>${p.parcN?`<div class="mu" style="font-size:11.5px;font-weight:700">🤝 ${esc(p.parcN)}</div>`:''}${p.marca?`<div class="mu" style="font-size:12.5px;font-weight:600">${esc(p.marca)}</div>`:''}${p.cod?`<div class="mu" style="font-size:12px">(Código ${esc(p.cod)})</div>`:''}<div class="pprice">${R(p.p)}<span class="mu" style="font:13px sans-serif"> / ${esc(p.u)}</span></div>${lowTag(p)}${qtyBtn(p)}</div>`).join('')+'</div>'+(l.length>lim?`<button class="b s w" onclick="lim+=60;$('#pl').innerHTML=listHtml()">Mostrar mais (${l.length-lim})</button>`:'');
 };
 vLoja=function(){
   const n=count();
@@ -907,7 +913,7 @@ vCfg=function(){
   <button class="b w" onclick="saveEmp()">Salvar taxas</button></div>
   <div class="card"><h2>🖨️ Impressora e cupom</h2>
   <label style="display:flex;gap:10px;align-items:center;color:var(--tx);margin:4px 0 10px"><input type="checkbox" style="width:auto;margin:0" ${autoPr?'checked':''} onchange="autoPr=this.checked;try{localStorage.setItem('autoPr',this.checked?'1':'0')}catch(e){}"> Imprimir automaticamente ao confirmar o pedido</label>
-  <p class="mu" style="margin:-4px 0 10px">Impressão direta, sem janela: abra o painel pela Gestão do programa Mercado Online no computador da loja.</p>
+  <p class="mu" style="margin:-4px 0 10px">Impressão direta, sem janela: abra o painel pela Gestão do programa AdaptaSys Mercado no computador da loja.</p>
   <label>Papel</label><select onchange="setFmt(this.value)"><option value="a4" ${fmt=='a4'?'selected':''}>A4</option><option value="t80" ${fmt=='t80'?'selected':''}>Bobina 80 mm (Bematech)</option></select>
   <label>Tamanho das letras (neste aparelho)</label><div class="q" style="justify-content:flex-start;margin-bottom:8px"><button onclick="bump(-5)" aria-label="Diminuir letras">A−</button><b class="psv">${Math.round(psc[fmt]*100)}%</b><button onclick="bump(5)" aria-label="Aumentar letras">A+</button></div>
   <label>Tamanho do logotipo: <b id="lwv">${E.lw}</b> mm</label><input type="range" min="20" max="70" value="${E.lw}" oninput="EMP.lw=+this.value;$('#lwv').textContent=this.value;refPrev()">

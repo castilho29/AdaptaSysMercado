@@ -34,7 +34,7 @@ input{font:inherit;width:100%;padding:14px;border:1.5px solid var(--bd);border-r
 .inst{display:flex;gap:12px;align-items:center;background:var(--ac2);border:1.5px solid var(--ac);border-radius:16px;padding:12px 14px;margin:10px 0}.inst img{width:48px;height:48px;border-radius:12px;flex:none}.inst div{flex:1;font-size:14.5px}.inst .t{display:block;font-size:16px;font-weight:800}.inst .b{min-height:42px;font-size:14.5px}
 .toast{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:#17202E;color:#fff;border-radius:12px;padding:12px 14px;font-weight:700;z-index:30;text-align:center}
 </style></head><body>
-<header><div><b id="hn">Entregas</b><small id="hs">Mercado Online</small></div><div class="sp"></div><button class="b s" style="min-height:40px;font-size:14px" onclick="carregar(true)">↻ Atualizar</button></header>
+<header><div><b id="hn">Entregas</b><small id="hs">AdaptaSys Mercado</small></div><div class="sp"></div><button class="b s" style="min-height:40px;font-size:14px" onclick="carregar(true)">↻ Atualizar</button></header>
 <div class="tabs" id="tabs" hidden><button id="t1" class="on" onclick="aba='fila';desenhar()">Entregar</button><button id="t2" onclick="aba='feitas';desenhar()">Hoje</button><button id="t3" onclick="aba='ganhos';desenhar()">💰 Ganhos</button></div>
 <div id="inst" style="max-width:640px;margin:0 auto;padding:0 16px"></div>
 <main id="m"><div class="vazio"><div>🏍️</div><p class="mu">Carregando…</p></div></main>
@@ -87,6 +87,19 @@ function pagto(o){
   if(o.pay=='Cartão')return `<div class="din cart">💳 Cartão · cobrar ${R(tot)}<small>Leve a maquininha.</small></div>`;
   const tr=+o.troco||0;return `<div class="din">💵 Dinheiro · receber ${R(tot)}${tr>0?`<small>Cliente paga com ${R(o.cash)} → <b>levar ${R(tr)} de troco</b></small>`:'<small>Sem troco</small>'}</div>`;
 }
+/* produtos de PARCEIRO no pedido: parada para buscar antes de entregar (ou o parceiro entrega direto) */
+const PST={novo:['wn','Aguardando o parceiro'],aceito:['wn','Parceiro separando'],pronto:['ok','Pronto para buscar'],saiu:['ac','Parceiro saiu para entregar'],entregue:['ok','Parceiro entregou'],falta:['wn','Parceiro avisou falta']};
+function coletas(o){
+  const ps=Object.entries(o.parts||{});if(!ps.length)return '';
+  return ps.map(([k,p])=>{
+    const st=PST[p.st||'novo']||PST.novo,l=p.loc&&isFinite(p.loc.lat)?p.loc:null,tel=dig(p.fone),its=(o.items||[]).filter(i=>i.parc==k);
+    if(p.entrega=='parceiro')return `<div class="ref" style="background:var(--ac2);color:var(--tx)">🤝 <b>${esc(p.nome)}</b> entrega direto ao cliente (${its.length} ite${its.length==1?'m':'ns'}). <span class="tag ${st[0]}">${st[1]}</span></div>`;
+    return `<div class="card" style="margin:10px 0;border:2px dashed var(--ac)"><div class="top"><div><b>📦 Buscar em ${esc(p.nome)}</b><div class="mu" style="font-size:14px">${esc(p.endereco||'')}</div></div>${p.col?'<span class="tag ok">✓ Coletado</span>':`<span class="tag ${st[0]}">${st[1]}</span>`}</div>
+     <ul style="margin:6px 0">${its.map(i=>`<li>${esc(i.q)} ${esc(i.u||'un')} · ${esc(i.n)}</li>`).join('')}</ul>${p.obs?`<div class="ref">📝 ${esc(p.obs)}</div>`:''}
+     ${o.st=='ent'||p.col?'':`<div class="bts">${l?`<a class="b s" href="https://www.google.com/maps/dir/?api=1&destination=${l.lat},${l.lng}&travelmode=driving" target="_blank" rel="noopener">🗺️ Rota até lá</a>`:p.endereco?`<a class="b s" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco)}" target="_blank" rel="noopener">🗺️ Mapa</a>`:''}${tel?`<a class="b s" href="tel:${tel}">📞 Ligar</a>`:''}<button class="b ok w" onclick="coletei('${o.id}','${k}')">✅ Peguei no parceiro</button></div>`}</div>`;
+  }).join('');
+}
+async function coletei(id,k){const r=await sb.rpc('entregador_coletou',{p_id:id,p_parc:k});if(r.error)return toast(r.error.message);toast('Coleta marcada.');carregar()}
 function card(o){
   const meu=o.rota&&EU&&o.rota.id==EU.id,outro=o.rota&&!meu,l=o.loc&&isFinite(o.loc.lat)?o.loc:null,tel=dig(o.ph),wa=tel?(tel.length<=11?'55'+tel:tel):'';
   const ent=o.st=='ent';
@@ -94,6 +107,7 @@ function card(o){
    ${ent?'<span class="tag ok">✓ Entregue</span>':meu?'<span class="tag ac">🛵 Com você</span>':outro?`<span class="tag wn">Com ${esc(o.rota.nome)}</span>`:o.fat?'<span class="tag ok">Pronto para sair</span>':'<span class="tag wn">Separando na loja</span>'}</div>
    <div class="end">📍 ${esc(o.addr||'')}</div>${o.bairro?`<div class="mu" style="font-weight:700">Bairro ${esc(o.bairro)}</div>`:''}
    ${o.ref||o.obs?`<div class="ref">${o.ref?'🏠 '+esc(o.ref):''}${o.ref&&o.obs?'<br>':''}${o.obs?'📝 '+esc(o.obs):''}</div>`:''}
+   ${coletas(o)}
    ${ent?`<p class="mu" style="margin:6px 0 0">Entregue às ${new Date(o.entregue.date).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${R(o.total)} (${esc(o.pay)})</p>`:pagto(o)}
    ${ent?'':`<div class="bts">
      ${l?`<a class="b" href="https://www.google.com/maps/dir/?api=1&destination=${l.lat},${l.lng}&travelmode=driving" target="_blank" rel="noopener">🗺️ Rota</a><a class="b s" href="https://waze.com/ul?ll=${l.lat},${l.lng}&navigate=yes" target="_blank" rel="noopener">Waze</a>`:`<a class="b w" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((o.addr||'')+' '+(o.bairro||''))}" target="_blank" rel="noopener">🗺️ Procurar endereço</a>`}
@@ -130,7 +144,9 @@ async function soltar(id){await sb.rpc('entregador_soltar',{p_id:id});carregar()
 function entregar(id){
   const o=L.find(x=>x.id==id);if(!o)return;const tr=+o.troco||0;
   const ov=document.createElement('div');ov.className='ov';ov.onclick=e=>{if(e.target==ov)ov.remove()};
+  const falta=Object.values(o.parts||{}).filter(p=>p.entrega!='parceiro'&&!p.col).map(p=>p.nome);
   ov.innerHTML=`<div class="card"><h2 style="margin:0 0 6px">Confirmar a entrega</h2><p style="font-size:17px">Pedido de <b>${esc(o.cn)}</b> entregue?</p>
+  ${falta.length?`<p class="ref">⚠️ Você ainda não marcou que pegou os produtos de <b>${falta.map(esc).join(', ')}</b>. Confira se levou tudo.</p>`:''}
   ${o.pay=='Dinheiro'?`<p class="din">💵 Recebeu ${R(o.total)}${tr>0?` e deu ${R(tr)} de troco`:''}?</p>`:o.pay=='Cartão'?`<p class="din cart">💳 Passou ${R(o.total)} no cartão?</p>`:`<p class="din pix">💠 Pix de ${R(o.total)} confirmado?</p>`}
   <div class="bts"><button class="b s" onclick="this.closest('.ov').remove()">Voltar</button><button class="b ok" id="eok">✅ Sim, entregue</button></div></div>`;
   document.body.appendChild(ov);
